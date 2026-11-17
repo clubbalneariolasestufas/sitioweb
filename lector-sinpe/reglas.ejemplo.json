@@ -1,0 +1,8 @@
+[
+  {
+    "nombre": "banco-ejemplo-sms",
+    "entrante": "ha recibido un SINPE",
+    "monto": "por\\s+([\\d.,]+)\\s+colones",
+    "comprobante": "comprobante\\s+(\\d{6,30})"
+  }
+]

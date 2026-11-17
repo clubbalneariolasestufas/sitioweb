@@ -1,0 +1,22 @@
+@use 'variables' as v;
+
+@mixin tablet {
+    @media (min-width: v.$tablet) { @content; }
+}
+@mixin desktop {
+    @media (min-width: v.$desktop) { @content; }
+}
+@mixin contenedor {
+    width: min(92%, 118rem);
+    margin-inline: auto;
+}
+@mixin grid($min: 28rem, $gap: 2.4rem) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min($min, 100%), 1fr));
+    gap: $gap;
+}
+@mixin reset-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}

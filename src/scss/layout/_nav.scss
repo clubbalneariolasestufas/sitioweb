@@ -1,0 +1,79 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(v.$blanco, 0.97);
+    box-shadow: 0 0.2rem 1.6rem rgba(10, 47, 56, 0.1);
+
+    &__contenido {
+        @include m.contenedor;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: v.$alto-nav;
+    }
+    &__marca {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        font-size: 2rem;
+        font-weight: 800;
+        color: v.$turquesa-oscuro;
+        text-decoration: none;
+        line-height: 1.1;
+    }
+    &__logo { width: auto; height: 5.8rem; }
+    &__nombre { display: none; @include m.tablet { display: block; } }
+    &__marca small { display: block; font-size: 1.1rem; font-weight: 600; color: v.$gris; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    &__boton {
+        display: grid;
+        place-items: center;
+        width: 4.6rem; height: 4.6rem;
+        border: 0.2rem solid v.$turquesa;
+        border-radius: 1rem;
+        background: none;
+        font-size: 2.4rem;
+        color: v.$turquesa-oscuro;
+        cursor: pointer;
+    }
+
+    &__lista {
+        @include m.reset-lista;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        display: none;
+        flex-direction: column;
+        background: v.$blanco;
+        box-shadow: 0 1.6rem 2.4rem rgba(10, 47, 56, 0.15);
+
+        &--abierta { display: flex; }
+    }
+    &__enlace {
+        display: block;
+        padding: 1.4rem 2rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 0.1rem solid #e6f1f2;
+
+        &:hover, &--activo { color: v.$turquesa-oscuro; background: v.$crema; }
+    }
+
+    @media (min-width: v.$desktop) {
+        &__boton { display: none; }
+        &__lista {
+            position: static;
+            display: flex;
+            flex-direction: row;
+            gap: 0.4rem;
+            box-shadow: none;
+            background: none;
+        }
+        &__enlace { padding: 0.8rem 1.1rem; border: 0; border-radius: 99rem; font-size: 1.4rem; }
+        &__enlace--activo { background: v.$turquesa-oscuro; color: v.$blanco; }
+        &__enlace--activo:hover { background: v.$turquesa-oscuro; color: v.$blanco; }
+    }
+}

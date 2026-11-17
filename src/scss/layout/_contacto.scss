@@ -1,0 +1,17 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.contacto {
+    @include m.contenedor;
+    display: grid;
+    gap: 3rem;
+
+    @media (min-width: v.$desktop) { grid-template-columns: 1fr 1.2fr; }
+
+    &__datos { display: grid; gap: 2rem; align-content: start; }
+    &__bloque h3 { font-size: 1.8rem; color: v.$turquesa-oscuro; margin-bottom: 0.4rem; }
+    &__bloque p { margin: 0; }
+    &__mapa { width: 100%; min-height: 36rem; border: 0; border-radius: v.$radio; box-shadow: v.$sombra; }
+}
+
+.preguntas { margin-top: 7rem; }

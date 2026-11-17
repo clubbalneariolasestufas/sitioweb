@@ -1,0 +1,19 @@
+@use '../base/variables' as v;
+
+// Botón circular con el ícono de una red social
+.red {
+    display: inline-grid;
+    place-items: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    color: v.$blanco;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+
+    &:hover { background: v.$celeste; color: v.$noche; transform: translateY(-0.2rem); }
+
+    &__icono { width: 1.8rem; height: 1.8rem; }
+
+    &--grande { width: 4.6rem; height: 4.6rem; border: 0.2rem solid rgba(v.$blanco, 0.6); }
+    &--grande .red__icono { width: 2.4rem; height: 2.4rem; }
+}

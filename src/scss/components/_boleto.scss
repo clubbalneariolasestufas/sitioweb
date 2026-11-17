@@ -1,0 +1,23 @@
+@use '../base/variables' as v;
+
+.boletos {
+    display: grid;
+    gap: 2rem;
+    margin-top: 1.6rem;
+}
+
+.boleto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: 1.6rem;
+    border: 0.2rem dashed v.$turquesa-oscuro;
+    border-radius: v.$radio;
+    text-align: center;
+
+    &__qr { width: 22rem; height: 22rem; image-rendering: pixelated; }
+    &__datos { display: grid; gap: 0.4rem; }
+    &__descarga { font-weight: 700; color: v.$turquesa-oscuro; }
+}

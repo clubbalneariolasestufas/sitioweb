@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Balneario Las Estufas | Piscinas, senderos y cataratas en Palmitos de Naranjo</title>
+    <meta name="description" content="Balneario familiar en Palmitos de Naranjo, San Ramón: piscinas, toboganes, senderos con cataratas, ranchos, cancha de tenis y eventos. Compre sus entradas en línea.">
+    <meta property="og:title" content="Club Balneario Las Estufas">
+    <meta property="og:description" content="Piscinas, senderos con cataratas, ranchos y eventos en Palmitos de Naranjo, San Ramón.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="build/img/hero-1600.webp">
+    <meta name="theme-color" content="#051c39">
+    <link rel="icon" type="image/png" href="build/img/favicon-64.png">
+    <link rel="apple-touch-icon" href="build/img/favicon-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="build/img/hero-1600.webp" type="image/webp" imagesrcset="build/img/hero-800.webp 800w, build/img/hero-1600.webp 1600w" imagesizes="100vw">
+    <link rel="stylesheet" href="build/css/app.css">
+</head>
+<body>
+
+    <!-- Íconos de redes (Feather Icons, licencia MIT) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="icono-facebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></symbol>
+        <symbol id="icono-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></symbol>
+    </svg>
+
+    <!-- Barra superior -->
+    <div class="topbar">
+        <div class="topbar__contenido">
+            <ul class="topbar__datos">
+                <li><a class="topbar__enlace" data-whatsapp href="#">💬 WhatsApp <span data-telefono></span></a></li>
+                <li>📍 Palmitos de Naranjo, San Ramón</li>
+            </ul>
+            <ul class="topbar__redes">
+                                <li><a class="red red--facebook" href="https://www.facebook.com/balneario.lasestufas/" target="_blank" rel="noopener" aria-label="Facebook del Club Las Estufas"><svg class="red__icono" aria-hidden="true" focusable="false"><use href="#icono-facebook"/></svg></a></li>
+                <li><a class="red red--instagram" href="https://www.instagram.com/club_las_estufas_oficial/" target="_blank" rel="noopener" aria-label="Instagram del Club Las Estufas"><svg class="red__icono" aria-hidden="true" focusable="false"><use href="#icono-instagram"/></svg></a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Navegación -->
+    <header class="nav">
+        <div class="nav__contenido">
+            <a class="nav__marca" href="#inicio"><img class="nav__logo" src="build/img/logo-130.webp" alt="Club Las Estufas, Balneario Naranjo" width="118" height="130"><span class="nav__nombre">Las Estufas<small>Club Balneario · Naranjo</small></span></a>
+            <button class="nav__boton" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+            <nav aria-label="Principal">
+                <ul class="nav__lista">
+                    <li><a class="nav__enlace" href="#inicio">Inicio</a></li>
+                    <li><a class="nav__enlace" href="#servicios">Servicios</a></li>
+                    <li><a class="nav__enlace" href="#senderos">Senderos</a></li>
+                    <li><a class="nav__enlace" href="#tiquetes">Tiquetes</a></li>
+                    <li><a class="nav__enlace" href="#reservas">Reservas</a></li>
+                    <li><a class="nav__enlace" href="#eventos">Eventos</a></li>
+                    <li><a class="nav__enlace" href="#galeria">Galería</a></li>
+                    <li><a class="nav__enlace" href="#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- INICIO -->
+        <section id="inicio" class="hero">
+            <picture>
+                <source type="image/webp" srcset="build/img/hero-800.webp 800w, build/img/hero-1600.webp 1600w" sizes="100vw">
+                <img class="hero__imagen" src="build/img/hero-1600.webp" alt="Piscina del Club Balneario Las Estufas rodeada de palmeras" width="1600" height="1200" fetchpriority="high">
+            </picture>
+            <div class="hero__contenido">
+                <div>
+                    <img class="hero__logo" src="build/img/logo-360.webp" alt="" width="360" height="395">
+                    <p class="hero__etiqueta">Palmitos de Naranjo · San Ramón</p>
+                    <h1 class="hero__titulo">¡Un lugar para disfrutar en familia!</h1>
+                    <p class="hero__texto">Piscinas, toboganes, zonas verdes y senderos con pequeñas cataratas. Pase el día en la naturaleza y entre con su código QR.</p>
+                    <div class="hero__acciones">
+                        <a class="boton boton--naranja" href="#tiquetes" data-abrir-entradas>Comprar entradas</a>
+                        <a class="boton boton--borde" href="#servicios">Ver servicios</a>
+                    </div>
+                </div>
+                <aside class="hero__horario">
+                    <h2>Horario</h2>
+                    <ul>
+                        <li>Jueves a martes: 8:00 a.m. a 5:00 p.m.</li>
+                        <li>Miércoles cerrado</li>
+                        <li>Abierto en feriados y días festivos</li>
+                        <li>Bar abierto los fines de semana</li>
+                    </ul>
+                    <p class="hero__aviso">Pagos en efectivo o SINPE Móvil.</p>
+                </aside>
+            </div>
+        </section>
+
+        <!-- SERVICIOS -->
+        <section id="servicios" class="seccion seccion--crema">
+            <div class="contenedor">
+                <h2 class="seccion__titulo">Instalaciones y servicios</h2>
+                <p class="seccion__subtitulo">Todo lo que ofrecemos para que su visita sea un día completo de descanso y diversión.</p>
+                <div class="servicios">
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/4-t.webp" alt="Piscina grande con sombrillas" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Piscinas</h3><p class="servicio__texto">Amplias piscinas con áreas de descanso, sombrillas y espacio para toda la familia.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/2-t.webp" alt="Tobogán azul entre árboles" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Toboganes</h3><p class="servicio__texto">Diversión acuática para grandes y chicos.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/13-t.webp" alt="Sendero entre vegetación" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><span class="servicio__etiqueta">Naturaleza</span><h3 class="servicio__titulo">Senderos y cataratas</h3><p class="servicio__texto">Caminatas entre vegetación hasta pequeñas cataratas.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/tenis-t.webp" alt="Cancha de tenis verde con red, rodeada de jardines" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><span class="servicio__etiqueta">Se alquila</span><h3 class="servicio__titulo">Cancha de tenis profesional</h3><p class="servicio__texto">Reserve su hora de juego en nuestra cancha profesional.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/8-t.webp" alt="Ranchos con hamacas iluminados de noche" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Ranchos</h3><p class="servicio__texto">Espacios para compartir en grupo. Reservación previa.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/9-t.webp" alt="Área techada con mesas" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Área techada para eventos</h3><p class="servicio__texto">Ideal para bailes, cumpleaños y actividades de grupo.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/7-t.webp" alt="Zona verde con vista a las montañas" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Parque y zonas verdes</h3><p class="servicio__texto">Amplias áreas al aire libre para jugar, descansar y respirar aire puro.</p></div>
+                    </article>
+                    <article class="servicio">
+                        <img class="servicio__foto" src="build/img/galeria/11-t.webp" alt="Plato de comida con refresco" loading="lazy" width="640" height="480">
+                        <div class="servicio__cuerpo"><h3 class="servicio__titulo">Comida y bar</h3><p class="servicio__texto">Antojitos, refrescos y bar abierto los fines de semana.</p></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- SENDEROS -->
+        <section id="senderos" class="seccion seccion--noche">
+            <div class="senderos">
+                <img class="senderos__foto" src="build/img/galeria/13.webp" alt="Sendero rodeado de plantas tropicales" loading="lazy" width="1086" height="1448">
+                <div>
+                    <h2 class="senderos__titulo">Senderos y cataratas</h2>
+                    <p>Más allá de las piscinas, el balneario tiene caminos para recorrer a pie en medio de la naturaleza, con pequeñas cataratas en el trayecto.</p>
+                    <ul class="senderos__lista">
+                        <li>Caminatas tranquilas para toda la familia</li>
+                        <li>Pequeñas cataratas para disfrutar y fotografiar</li>
+                        <li>Parque con zonas verdes y mucha sombra</li>
+                    </ul>
+                    <a class="boton boton--naranja" href="#tiquetes" data-abrir-entradas>Visítenos: compre su entrada</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIQUETES -->
+        <section id="tiquetes" class="seccion">
+            <div class="contenedor tiquetes">
+                <h2 class="seccion__titulo">Tiquetes en línea</h2>
+                <p class="seccion__subtitulo">Escoja su pase, pague por SINPE Móvil y presente su código QR al llegar.</p>
+                <div class="pases">
+                    <article class="pase">
+                        <h3 class="pase__nombre">Pase del día</h3>
+                        <ul class="pase__incluye">
+                            <li>Uso total de instalaciones</li>
+                            <li>Hotdog o porción de pizza + refresco</li>
+                        </ul>
+                        <p class="pase__precio">₡6.000 <small>por persona</small></p>
+                        <button class="boton boton--completo" type="button" data-abrir-entradas="dia">Comprar</button>
+                    </article>
+                    <article class="pase pase--destacado">
+                        <h3 class="pase__nombre">Pase Cervecero</h3>
+                        <ul class="pase__incluye">
+                            <li>Uso total de instalaciones</li>
+                            <li>Caldoza + cerveza</li>
+                        </ul>
+                        <p class="pase__precio">₡6.000 <small>por persona</small></p>
+                        <button class="boton boton--naranja boton--completo" type="button" data-abrir-entradas="cervecero">Comprar</button>
+                    </article>
+                    <article class="pase">
+                        <h3 class="pase__nombre">Pase Económico</h3>
+                        <ul class="pase__incluye">
+                            <li>Uso total de instalaciones</li>
+                        </ul>
+                        <p class="pase__precio">₡3.000 <small>por persona</small></p>
+                        <button class="boton boton--completo" type="button" data-abrir-entradas="economico">Comprar</button>
+                    </article>
+                </div>
+                <p class="tiquetes__nota" style="text-align:center">También puede pagar en efectivo en la entrada.</p>
+            </div>
+        </section>
+
+        <!-- RESERVAS -->
+        <section id="reservas" class="seccion seccion--noche">
+            <h2 class="seccion__titulo">Reservaciones</h2>
+            <p class="seccion__subtitulo">Ranchos, eventos con música y la cancha de tenis: envíenos su solicitud y le confirmamos.</p>
+            <div class="reservas">
+                <div class="reservas__info">
+                    <h3>¿Qué puede reservar?</h3>
+                    <ul>
+                        <li><strong>Ranchos</strong> para su grupo, con reservación previa.</li>
+                        <li><strong>Eventos</strong>: bailes, música con DJ, cumpleaños y actividades de empresa.</li>
+                        <li><strong>Cancha de tenis</strong> profesional, por hora.</li>
+                    </ul>
+                </div>
+                <div class="reservas__formulario">
+                    <form id="form-reservas" class="formulario" name="reservas" method="POST" data-netlify="true" netlify-honeypot="campo-trampa">
+                        <input type="hidden" name="form-name" value="reservas">
+                        <p class="formulario__trampa" aria-hidden="true"><label>No llenar: <input name="campo-trampa" tabindex="-1" autocomplete="off"></label></p>
+
+                        <fieldset style="border:0;padding:0;margin:0">
+                            <legend class="formulario__etiqueta">¿Qué desea reservar?</legend>
+                            <div class="formulario__opciones">
+                                <label class="formulario__opcion"><input type="radio" name="tipo" value="rancho" checked><span>Rancho</span></label>
+                                <label class="formulario__opcion"><input type="radio" name="tipo" value="evento"><span>Evento</span></label>
+                                <label class="formulario__opcion"><input type="radio" name="tipo" value="tenis"><span>Cancha de tenis</span></label>
+                            </div>
+                        </fieldset>
+
+                        <div class="formulario__fila formulario__fila--doble">
+                            <div class="formulario__campo">
+                                <label class="formulario__etiqueta" for="fecha">Fecha</label>
+                                <input class="formulario__control" id="fecha" name="fecha" type="date" required>
+                            </div>
+                            <div class="formulario__campo" data-solo="rancho evento">
+                                <label class="formulario__etiqueta" for="personas">Cantidad de personas</label>
+                                <input class="formulario__control" id="personas" name="personas" type="number" min="1" max="500" value="10">
+                            </div>
+                        </div>
+
+                        <div class="formulario__campo" data-solo="evento" hidden>
+                            <label class="formulario__etiqueta" for="tipo-evento">Tipo de evento</label>
+                            <select class="formulario__control" id="tipo-evento" name="tipo-evento">
+                                <option>Baile</option>
+                                <option>Música con DJ</option>
+                                <option>Cumpleaños</option>
+                                <option>Actividad de empresa</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="formulario__fila formulario__fila--doble" data-solo="evento tenis" hidden>
+                            <div class="formulario__campo">
+                                <label class="formulario__etiqueta" for="hora-inicio">Hora de inicio</label>
+                                <input class="formulario__control" id="hora-inicio" name="hora-inicio" type="time">
+                            </div>
+                            <div class="formulario__campo">
+                                <label class="formulario__etiqueta" for="hora-fin">Hora de fin</label>
+                                <input class="formulario__control" id="hora-fin" name="hora-fin" type="time">
+                            </div>
+                        </div>
+
+                        <div class="formulario__fila formulario__fila--doble">
+                            <div class="formulario__campo">
+                                <label class="formulario__etiqueta" for="nombre-reserva">Nombre</label>
+                                <input class="formulario__control" id="nombre-reserva" name="nombre" type="text" required autocomplete="name">
+                            </div>
+                            <div class="formulario__campo">
+                                <label class="formulario__etiqueta" for="telefono-reserva">WhatsApp o teléfono</label>
+                                <input class="formulario__control" id="telefono-reserva" name="telefono" type="tel" required autocomplete="tel">
+                            </div>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__etiqueta" for="correo">Correo (opcional)</label>
+                            <input class="formulario__control" id="correo" name="correo" type="email" autocomplete="email">
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__etiqueta" for="comentarios">Comentarios</label>
+                            <textarea class="formulario__control" id="comentarios" name="comentarios"></textarea>
+                        </div>
+                        <button class="boton boton--naranja" type="submit">Enviar solicitud</button>
+                        <p id="reservas-mensaje" class="formulario__mensaje" hidden role="status"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- EVENTOS -->
+        <section id="eventos" class="seccion seccion--crema">
+            <div class="contenedor">
+                <h2 class="seccion__titulo">Próximos eventos</h2>
+                <p class="seccion__subtitulo">Música, DJs y tardes bailables en un ambiente familiar.</p>
+                <div id="eventos-lista" class="eventos"></div>
+            </div>
+        </section>
+
+        <!-- GALERÍA -->
+        <section id="galeria" class="seccion">
+            <div class="contenedor">
+                <h2 class="seccion__titulo">Galería</h2>
+                <p class="seccion__subtitulo">Un vistazo a nuestras instalaciones.</p>
+                <div id="galeria-lista" class="galeria"></div>
+            </div>
+        </section>
+
+        <!-- CONTACTO + PREGUNTAS -->
+        <section id="contacto" class="seccion seccion--crema">
+            <h2 class="seccion__titulo">Contacto y ubicación</h2>
+            <div class="contacto">
+                <div class="contacto__datos">
+                    <div class="contacto__bloque"><h3>Ubicación</h3><p>Palmitos de Naranjo, San Ramón, Alajuela, Costa Rica.</p></div>
+                    <div class="contacto__bloque"><h3>WhatsApp</h3><p><a data-whatsapp href="#">Escríbanos aquí</a></p></div>
+                    <div class="contacto__bloque"><h3>SINPE Móvil (entradas)</h3><p data-sinpe></p></div>
+                    <div class="contacto__bloque"><h3>Cómo llegar</h3><p><a href="https://waze.com/ul?q=Club%20Balneario%20Las%20Estufas%20Palmitos%20de%20Naranjo" target="_blank" rel="noopener">Abrir en Waze</a> · <a href="https://www.google.com/maps/search/?api=1&query=Club+Balneario+Las+Estufas+Palmitos+de+Naranjo+San+Ramon" target="_blank" rel="noopener">Abrir en Google Maps</a></p></div>
+                </div>
+                <iframe class="contacto__mapa" title="Mapa del Club Balneario Las Estufas" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Club+Balneario+Las+Estufas+Palmitos+de+Naranjo+San+Ramon&output=embed"></iframe>
+            </div>
+
+            <div id="preguntas" class="preguntas contenedor">
+                <h2 class="seccion__titulo">Preguntas frecuentes</h2>
+                <div class="acordeon">
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Cuál es el horario?</summary><p class="acordeon__respuesta">De jueves a martes de 8:00 a.m. a 5:00 p.m. Los miércoles permanecemos cerrados. Atendemos todos los feriados y días festivos.</p></details>
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Cómo puedo pagar?</summary><p class="acordeon__respuesta">En efectivo o por SINPE Móvil. También puede comprar su entrada en línea y presentar el código QR.</p></details>
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Es necesario reservar los ranchos?</summary><p class="acordeon__respuesta">Sí, los ranchos se reservan con anticipación. Use el formulario de Reservaciones o escríbanos por WhatsApp.</p></details>
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Puedo organizar un baile o una fiesta?</summary><p class="acordeon__respuesta">Sí. Envíe su solicitud en Reservaciones indicando fecha, tipo de evento y cantidad de personas.</p></details>
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Se puede alquilar la cancha de tenis?</summary><p class="acordeon__respuesta">Sí, contamos con una cancha de tenis profesional que se alquila por hora. Solicítela en Reservaciones.</p></details>
+                    <details class="acordeon__item"><summary class="acordeon__pregunta">¿Hay bar abierto?</summary><p class="acordeon__respuesta">El bar abre los fines de semana.</p></details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer__redes">
+            <li><a class="red red--facebook red--grande" href="https://www.facebook.com/balneario.lasestufas/" target="_blank" rel="noopener" aria-label="Facebook del Club Las Estufas"><svg class="red__icono" aria-hidden="true" focusable="false"><use href="#icono-facebook"/></svg></a></li>
+            <li><a class="red red--instagram red--grande" href="https://www.instagram.com/club_las_estufas_oficial/" target="_blank" rel="noopener" aria-label="Instagram del Club Las Estufas"><svg class="red__icono" aria-hidden="true" focusable="false"><use href="#icono-instagram"/></svg></a></li>
+        </ul>
+        <p class="footer__legal">© <span id="anio"></span> Club Balneario Las Estufas. Todos los derechos reservados.</p>
+    </footer>
+
+    <a class="whatsapp-flotante" data-whatsapp href="#" aria-label="Escribir por WhatsApp">💬</a>
+
+    <!-- Compra de entradas -->
+    <dialog id="modal-entradas" class="modal" aria-labelledby="titulo-entradas">
+        <div class="modal__cabecera">
+            <h2 id="titulo-entradas" class="modal__titulo">Comprar entradas</h2>
+            <button class="modal__cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal__cuerpo">
+            <!-- Paso 1: datos de la compra -->
+            <form id="form-entradas" class="formulario">
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="pase">Pase</label>
+                    <select class="formulario__control" id="pase" name="pase"></select>
+                </div>
+                <div class="formulario__fila formulario__fila--doble">
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="cantidad">Cantidad de personas</label>
+                        <input class="formulario__control" id="cantidad" name="cantidad" type="number" min="1" max="50" value="1" required>
+                    </div>
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="fecha-visita">Fecha de la visita</label>
+                        <input class="formulario__control" id="fecha-visita" name="fecha" type="date" required>
+                    </div>
+                </div>
+                <div class="formulario__fila formulario__fila--doble">
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="nombre-entradas">Nombre</label>
+                        <input class="formulario__control" id="nombre-entradas" name="nombre" type="text" required autocomplete="name">
+                    </div>
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="telefono-entradas">WhatsApp</label>
+                        <input class="formulario__control" id="telefono-entradas" name="telefono" type="tel" required autocomplete="tel">
+                    </div>
+                </div>
+                <div class="formulario__campo" data-solo-api>
+                    <label class="formulario__etiqueta" for="correo-entradas">Correo (opcional, para recibir los boletos)</label>
+                    <input class="formulario__control" id="correo-entradas" name="correo" type="email" autocomplete="email">
+                </div>
+                <div class="formulario__total"><span>Total</span><span id="entradas-total">₡0</span></div>
+                <button class="boton boton--naranja boton--completo" type="submit">Continuar</button>
+                <p id="entradas-mensaje" class="formulario__mensaje" hidden role="status"></p>
+            </form>
+
+            <!-- Paso 2: pagar por SINPE y confirmar -->
+            <form id="form-pago" class="formulario" hidden>
+                <p class="formulario__mensaje">Su orden es <strong id="pago-codigo"></strong>. Haga un SINPE Móvil de <strong id="pago-monto"></strong> al <strong id="pago-sinpe"></strong> y escriba <strong>solo el código de la orden</strong> en el detalle (descripción) del SINPE.</p>
+                <p class="formulario__nota">Deje esta página abierta: apenas llegue su pago, sus boletos aparecen aquí solos.</p>
+                <p id="pago-vence" class="formulario__nota"></p>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="ultimos4">¿Olvidó escribir el código? Ponga aquí los últimos 4 dígitos del número de comprobante</label>
+                    <input class="formulario__control" id="ultimos4" name="ultimos4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
+                </div>
+                <button class="boton boton--naranja boton--completo" type="submit">Ya pagué: confirmar y recibir mis boletos</button>
+                <p id="pago-mensaje" class="formulario__mensaje" hidden role="status"></p>
+            </form>
+
+            <!-- Paso 3: boletos -->
+            <div id="boletos" hidden>
+                <p class="formulario__mensaje">Pago confirmado. Presente cada código QR en la entrada. Guarde una captura o descargue las imágenes.</p>
+                <p id="boletos-correo" class="formulario__nota" hidden>También los enviamos a su correo.</p>
+                <div id="boletos-lista" class="boletos"></div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Visor de galería -->
+    <dialog id="visor" class="modal modal--imagen" aria-label="Foto ampliada">
+        <button class="modal__cerrar" type="button" data-cerrar aria-label="Cerrar" style="color:#fff">×</button>
+        <img src="" alt="">
+    </dialog>
+
+    <script type="module" src="build/js/app.js"></script>
+</body>
+</html>

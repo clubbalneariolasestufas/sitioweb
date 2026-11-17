@@ -1,0 +1,18 @@
+# Servicio de arranque automático. Instalar con:
+#   sudo cp lector-sinpe.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now lector-sinpe
+[Unit]
+Description=Lector SINPE del Club Las Estufas
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=estufas
+WorkingDirectory=/home/estufas/lector-sinpe
+ExecStart=/usr/bin/node src/index.mjs
+Restart=always
+RestartSec=10
+SupplementaryGroups=dialout
+
+[Install]
+WantedBy=multi-user.target

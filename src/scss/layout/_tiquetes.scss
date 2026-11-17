@@ -1,0 +1,26 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.pases {
+    @include m.grid(28rem, 2.4rem);
+    margin-bottom: 3.6rem;
+}
+
+.pase {
+    display: flex;
+    flex-direction: column;
+    border-radius: v.$radio;
+    background: v.$blanco;
+    box-shadow: v.$sombra;
+    overflow: hidden;
+
+    &__nombre { margin: 0; padding: 1.8rem 2.2rem; background: v.$turquesa-oscuro; color: v.$blanco; font-size: 2.2rem; font-weight: 800; }
+    &--destacado &__nombre { background: v.$naranja; color: v.$noche; }
+    &__incluye { @include m.reset-lista; flex: 1; display: grid; gap: 1rem; padding: 2.2rem; }
+    &__incluye li::before { content: '✔ '; color: v.$verde; font-weight: 800; }
+    &__precio { margin: 0; padding: 1.6rem 2.2rem; background: v.$crema; font-size: 2.6rem; font-weight: 800; color: v.$turquesa-oscuro; }
+    &__precio small { font-size: 1.3rem; font-weight: 600; color: v.$gris; }
+}
+
+.tiquetes__acciones { text-align: center; }
+.tiquetes__nota { margin-top: 1.4rem; font-size: 1.4rem; color: v.$gris; }

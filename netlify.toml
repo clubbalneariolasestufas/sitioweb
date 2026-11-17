@@ -1,0 +1,45 @@
+# El sitio ya viene compilado en public/: Netlify solo publica esa carpeta (sin comando de build).
+# El código de las funciones, el lector y las pruebas quedan fuera de lo publicado.
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/panel"
+  to = "/panel.html"
+  status = 200
+
+[[redirects]]
+  from = "/puerta"
+  to = "/panel.html"
+  status = 200
+
+[[headers]]
+  for = "/build/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/build/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/build/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/panel.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"

@@ -1,0 +1,69 @@
+@use '../base/variables' as v;
+
+.formulario {
+    display: grid;
+    gap: 1.6rem;
+
+    &__fila { display: grid; gap: 1.6rem; }
+    @media (min-width: v.$tablet) {
+        &__fila--doble { grid-template-columns: 1fr 1fr; }
+    }
+
+    &__campo { display: flex; flex-direction: column; gap: 0.6rem; }
+    &__campo[hidden] { display: none; }
+
+    &__etiqueta { font-weight: 700; font-size: 1.4rem; }
+
+    &__control {
+        width: 100%;
+        padding: 1.2rem 1.4rem;
+        border: 0.2rem solid #cfe3e6;
+        border-radius: 1rem;
+        font: inherit;
+        background: v.$blanco;
+        color: v.$texto;
+
+        &:focus { border-color: v.$turquesa; outline: none; }
+    }
+    textarea.formulario__control { min-height: 10rem; resize: vertical; }
+
+    // Opciones tipo "pastilla" (radio estilizado)
+    &__opciones { display: flex; flex-wrap: wrap; gap: 1rem; }
+    &__opcion input { position: absolute; opacity: 0; }
+    &__opcion span {
+        display: inline-block;
+        padding: 1rem 1.8rem;
+        border: 0.2rem solid v.$turquesa-oscuro;
+        border-radius: 99rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    &__opcion input:checked + span { background: v.$turquesa-oscuro; color: v.$blanco; }
+    &__opcion input:focus-visible + span { outline: 0.3rem solid v.$naranja; }
+
+    &__trampa { position: absolute; left: -9999px; }
+
+    &__total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.4rem 1.8rem;
+        border-radius: 1rem;
+        background: v.$crema;
+        font-weight: 700;
+        font-size: 1.8rem;
+    }
+
+    &__mensaje {
+        margin: 0;
+        padding: 1.2rem 1.6rem;
+        border-radius: 1rem;
+        background: #e3f6e9;
+        color: #17653a;
+        font-weight: 600;
+
+        &--error { background: #fde7e7; color: #8f1d1d; }
+    }
+}
+
+.formulario__nota { margin: 0; font-size: 1.4rem; color: v.$gris; }

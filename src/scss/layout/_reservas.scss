@@ -1,0 +1,26 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.reservas {
+    @include m.contenedor;
+    display: grid;
+    gap: 3.6rem;
+
+    @media (min-width: v.$desktop) { grid-template-columns: 0.8fr 1.2fr; align-items: start; }
+
+    &__info h3 { font-size: 2.4rem; color: v.$celeste; }
+    &__info ul { @include m.reset-lista; display: grid; gap: 1.4rem; margin-top: 2rem; }
+    &__info li { padding-left: 3.4rem; position: relative; }
+    &__info li::before { position: absolute; left: 0; font-size: 2.2rem; }
+    &__info li:nth-child(1)::before { content: '🏕️'; }
+    &__info li:nth-child(2)::before { content: '🎶'; }
+    &__info li:nth-child(3)::before { content: '🎾'; }
+
+    &__formulario {
+        padding: 3rem;
+        border-radius: v.$radio;
+        background: v.$blanco;
+        color: v.$texto;
+        box-shadow: v.$sombra;
+    }
+}

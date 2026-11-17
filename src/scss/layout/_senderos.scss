@@ -1,0 +1,17 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.senderos {
+    @include m.contenedor;
+    display: grid;
+    gap: 4rem;
+    align-items: center;
+
+    @media (min-width: v.$desktop) { grid-template-columns: 1fr 1fr; }
+
+    &__foto { width: 100%; max-height: 62rem; object-fit: cover; border-radius: v.$radio; box-shadow: v.$sombra; }
+    &__titulo { font-size: clamp(2.8rem, 5vw, 4.2rem); color: v.$celeste; }
+    &__lista { @include m.reset-lista; display: grid; gap: 1.2rem; margin: 2.4rem 0 3rem; }
+    &__lista li { display: flex; gap: 1.2rem; align-items: flex-start; }
+    &__lista li::before { content: '🌿'; }
+}

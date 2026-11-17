@@ -1,0 +1,26 @@
+{
+  "name": "balneario-las-estufas",
+  "version": "2.0.0",
+  "description": "Sitio de una sola página del Club Balneario Las Estufas (Palmitos de Naranjo, San Ramón)",
+  "type": "module",
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build",
+    "test": "node --test tests/funciones.test.mjs",
+    "demo": "node scripts/demo.mjs"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-sass": "^5.1.0",
+    "gulp-terser": "^2.1.0",
+    "sass": "^1.75.0",
+    "sharp": "^0.33.5",
+    "jsqr": "1.4.0"
+  },
+  "dependencies": {
+    "mongodb": "^6.8.0",
+    "nodemailer": "^6.9.14",
+    "qrcode": "^1.5.4"
+  }
+}

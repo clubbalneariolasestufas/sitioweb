@@ -1,0 +1,21 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.topbar {
+    background: v.$noche;
+    color: rgba(v.$blanco, 0.9);
+    font-size: 1.3rem;
+
+    &__contenido {
+        @include m.contenedor;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.6rem 2rem;
+        padding-block: 0.8rem;
+    }
+    &__datos, &__redes { display: flex; flex-wrap: wrap; gap: 0.4rem 2rem; @include m.reset-lista; }
+    &__enlace { text-decoration: none; }
+    &__enlace:hover { color: v.$celeste; }
+}

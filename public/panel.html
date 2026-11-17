@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#051c39">
+    <link rel="icon" type="image/png" href="build/img/favicon-64.png">
+    <title>Panel del personal | Club Las Estufas</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root { --noche: #051c39; --azul: #0c426c; --naranja: #e8911d; --verde: #1f8a3b; --rojo: #b3261e; --amarillo: #f2c230; --gris: #7b8a94; }
+        html { font-size: 62.5%; }
+        body { margin: 0; font: 1.8rem/1.4 system-ui, sans-serif; background: var(--noche); color: #fff; min-height: 100vh; }
+        [hidden] { display: none !important; }
+        button, input { font: inherit; }
+        .panel { width: min(100%, 56rem); margin: 0 auto; padding: 1.2rem 1.2rem 4rem; display: grid; gap: 1.4rem; }
+        .panel__titulo { margin: 0; font-size: 2.4rem; }
+        .panel__sub { margin: 0; opacity: .85; }
+
+        /* Barra del semáforo general */
+        .barra { display: flex; align-items: center; gap: 1.2rem; width: 100%; padding: 1.2rem 1.6rem; border: 0; border-radius: 1.2rem; color: #fff; font-weight: 800; text-align: left; cursor: pointer; }
+        .barra--verde { background: var(--verde); }
+        .barra--amarillo { background: var(--amarillo); color: var(--noche); }
+        .barra--rojo { background: var(--rojo); }
+        .barra--gris { background: var(--gris); }
+        .barra__luz { width: 2rem; height: 2rem; border-radius: 50%; background: currentColor; flex: none; }
+
+        .tarjeta { display: grid; gap: 1.2rem; padding: 1.6rem; border-radius: 1.2rem; background: var(--azul); }
+        .menu { display: grid; gap: 1.2rem; }
+        .boton { display: block; width: 100%; padding: 1.6rem; border: 0; border-radius: 1.2rem; background: var(--naranja); color: var(--noche); font-weight: 800; font-size: 2rem; cursor: pointer; }
+        .boton--claro { background: #fff; }
+        .boton--linea { background: transparent; color: #fff; border: .2rem solid #fff; }
+        .boton--menu { padding: 2.2rem 1.6rem; font-size: 2.2rem; text-align: left; }
+        .boton--menu small { display: block; font-size: 1.5rem; font-weight: 600; }
+        .boton:disabled { opacity: .5; }
+        .campo { width: 100%; padding: 1.4rem; border: 0; border-radius: .8rem; font-size: 2rem; }
+
+        .contador { display: flex; justify-content: space-between; gap: 1rem; font-weight: 700; }
+        .video { width: 100%; border-radius: 1rem; background: #000; aspect-ratio: 4 / 3; object-fit: cover; }
+
+        .resultado { padding: 2.4rem 1.2rem; border-radius: 1.2rem; text-align: center; font-size: 3rem; font-weight: 800; }
+        .resultado small { display: block; margin-top: .6rem; font-size: 1.7rem; font-weight: 600; }
+        .resultado--ok { background: var(--verde); }
+        .resultado--malo { background: var(--rojo); }
+        .resultado--aviso { background: var(--amarillo); color: var(--noche); }
+
+        .lista { display: grid; gap: 1.2rem; }
+        .compra { display: grid; gap: .8rem; padding: 1.4rem; border-radius: 1rem; background: #fff; color: var(--noche); }
+        .compra__estado { justify-self: start; padding: .2rem 1.2rem; border-radius: 99rem; font-weight: 800; font-size: 1.5rem; color: #fff; }
+        .compra__estado--pagada { background: var(--verde); }
+        .compra__estado--pendiente { background: var(--naranja); color: var(--noche); }
+        .compra__acciones { display: grid; gap: .8rem; }
+        .compra .boton { font-size: 1.7rem; padding: 1.2rem; }
+
+        .luz { display: grid; grid-template-columns: 2.4rem 1fr; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; background: #fff; color: var(--noche); }
+        .luz__punto { width: 2.4rem; height: 2.4rem; border-radius: 50%; margin-top: .2rem; }
+        .luz__punto--verde { background: var(--verde); } .luz__punto--amarillo { background: var(--amarillo); }
+        .luz__punto--rojo { background: var(--rojo); } .luz__punto--gris { background: var(--gris); }
+        .luz__nombre { font-weight: 800; }
+        .luz__hacer { margin-top: .4rem; padding: .8rem; border-radius: .6rem; background: #fdf1dc; font-weight: 600; }
+
+        .boletos { display: grid; gap: 1.2rem; }
+        .boletos figure { margin: 0; padding: 1.2rem; border-radius: 1rem; background: #fff; color: var(--noche); text-align: center; }
+        .boletos img { width: 22rem; height: 22rem; image-rendering: pixelated; }
+        .aviso { margin: 0; padding: 1.2rem; border-radius: .8rem; background: #fdf1dc; color: var(--noche); font-weight: 600; }
+        .aviso--error { background: #fde7e7; color: #8f1d1d; }
+        .sinred { position: sticky; top: 0; z-index: 5; padding: 1.2rem; background: var(--rojo); text-align: center; font-weight: 800; }
+    </style>
+</head>
+<body>
+    <div id="sinred" class="sinred" hidden>SIN INTERNET en este aparato. Revise el wifi o los datos.</div>
+    <main class="panel">
+        <h1 class="panel__titulo">Panel del personal</h1>
+
+        <!-- Entrada con PIN -->
+        <form id="v-pin" class="tarjeta">
+            <label for="pin">Escriba su PIN</label>
+            <input class="campo" id="pin" type="password" inputmode="numeric" autocomplete="off" required>
+            <button class="boton" type="submit">Entrar</button>
+            <p id="pin-error" class="aviso aviso--error" hidden></p>
+        </form>
+
+        <div id="v-app" hidden>
+            <div class="panel" style="padding:0">
+                <button id="barra" class="barra barra--gris" type="button"><span class="barra__luz"></span><span id="barra-texto">Revisando conexiones…</span></button>
+                <div class="contador tarjeta"><span>Ingresos de hoy</span><span id="contador">–</span></div>
+
+                <!-- Menú -->
+                <section id="v-menu" class="menu">
+                    <button class="boton boton--menu" type="button" data-ir="escanear">Escanear boletos<small>Para la entrada: lea el código QR del cliente</small></button>
+                    <button class="boton boton--menu boton--claro" type="button" data-ir="buscar">Buscar una compra<small>Cliente sin QR, o que dice que ya pagó</small></button>
+                    <button class="boton boton--menu boton--claro" type="button" data-ir="estado">Estado del sistema<small>Ver si todo está conectado</small></button>
+                    <button id="salir" class="boton boton--linea" type="button">Cerrar sesión</button>
+                </section>
+
+                <!-- Escáner -->
+                <section id="v-escanear" class="tarjeta" hidden>
+                    <video id="video" class="video" playsinline muted></video>
+                    <canvas id="lienzo" hidden></canvas>
+                    <button id="btn-camara" class="boton" type="button">Encender la cámara</button>
+                    <div id="resultado" class="resultado" hidden role="status" aria-live="assertive"></div>
+                    <button id="btn-grupo" class="boton" type="button" hidden></button>
+                    <label for="manual">Si la cámara no lee, escriba aquí el código de la compra (6 letras y números):</label>
+                    <input class="campo" id="manual" type="text" autocomplete="off" autocapitalize="characters" maxlength="6">
+                    <button id="btn-manual" class="boton boton--claro" type="button">Buscar esa compra</button>
+                    <button class="boton boton--linea" type="button" data-ir="menu">Volver</button>
+                </section>
+
+                <!-- Buscar -->
+                <section id="v-buscar" class="tarjeta" hidden>
+                    <label for="texto">Código de la compra o teléfono del cliente</label>
+                    <input class="campo" id="texto" type="text" autocomplete="off" autocapitalize="characters">
+                    <button id="btn-buscar" class="boton" type="button">Buscar</button>
+                    <p id="buscar-aviso" class="aviso" hidden></p>
+                    <div id="buscar-lista" class="lista"></div>
+                    <div id="buscar-boletos" class="boletos"></div>
+                    <button class="boton boton--linea" type="button" data-ir="menu">Volver</button>
+                </section>
+
+                <!-- Estado -->
+                <section id="v-estado" class="tarjeta" hidden>
+                    <p class="panel__sub">Verde: funciona. Amarillo: atención. Rojo: no funciona. Gris: sin instalar.</p>
+                    <div id="estado-lista" class="lista"></div>
+                    <button id="btn-revisar" class="boton boton--claro" type="button">Revisar de nuevo</button>
+                    <button id="btn-loyverse" class="boton boton--claro" type="button" hidden>Enviar ahora las ventas a Loyverse</button>
+                    <button class="boton boton--linea" type="button" data-ir="menu">Volver</button>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="build/vendor/jsQR.js"></script>
+    <script>
+    (() => {
+        const $ = s => document.querySelector(s)
+        const $$ = s => [...document.querySelectorAll(s)]
+        const el = (etiqueta, clase, texto) => { const e = document.createElement(etiqueta); if (clase) e.className = clase; if (texto != null) e.textContent = texto; return e }
+        const colones = n => '₡' + Number(n).toLocaleString('es-CR')
+        const guardar = { get: () => { try { return sessionStorage.getItem('pin') || '' } catch { return '' } }, set: v => { try { v ? sessionStorage.setItem('pin', v) : sessionStorage.removeItem('pin') } catch {} } }
+
+        let pin = guardar.get()
+        let rol = ''
+        let ultimoToken = ''
+        let ocupado = false
+        let flujo = null
+
+        async function api(ruta, cuerpo) {
+            const resp = await fetch(ruta, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin, ...cuerpo }) })
+            const datos = await resp.json().catch(() => ({}))
+            if (resp.status === 401) { cerrarSesion('PIN incorrecto. Escríbalo de nuevo.'); throw new Error('PIN incorrecto') }
+            if (!resp.ok) throw new Error(datos.error || 'No se pudo completar. Intente de nuevo.')
+            return datos
+        }
+
+        /* ---------- Sesión ---------- */
+        function cerrarSesion(mensaje) {
+            pin = ''; guardar.set(''); apagarCamara()
+            $('#v-app').hidden = true; $('#v-pin').hidden = false
+            const e = $('#pin-error'); e.hidden = !mensaje; e.textContent = mensaje || ''
+        }
+        $('#v-pin').addEventListener('submit', async e => {
+            e.preventDefault()
+            pin = $('#pin').value; $('#pin').value = ''
+            try { await cargarEstado(); guardar.set(pin); $('#v-pin').hidden = true; $('#v-app').hidden = false; ir('menu') }
+            catch (err) { if (pin) { const m = $('#pin-error'); m.hidden = false; m.textContent = err.message } }
+        })
+        $('#salir').addEventListener('click', () => cerrarSesion())
+
+        /* ---------- Navegación ---------- */
+        function ir(vista) {
+            ['menu', 'escanear', 'buscar', 'estado'].forEach(v => { $('#v-' + v).hidden = v !== vista })
+            if (vista !== 'escanear') apagarCamara()
+            if (vista === 'estado') cargarEstado()
+            window.scrollTo(0, 0)
+        }
+        $$('[data-ir]').forEach(b => b.addEventListener('click', () => ir(b.dataset.ir)))
+        $('#barra').addEventListener('click', () => ir('estado'))
+
+        /* ---------- Semáforo ---------- */
+        const TEXTO_BARRA = { verde: 'Todo funciona', amarillo: 'Funciona, con avisos. Toque para ver', rojo: 'HAY UN PROBLEMA. Toque para ver qué hacer', gris: 'Revisando conexiones…' }
+        async function cargarEstado() {
+            const d = await api('/api/estado', {})
+            rol = d.rol
+            $('#barra').className = 'barra barra--' + d.global
+            $('#barra-texto').textContent = TEXTO_BARRA[d.global]
+            $('#contador').textContent = `${d.hoy.ingresados} de ${d.hoy.vendidos} boletos en línea`
+            const lista = $('#estado-lista'); lista.replaceChildren()
+            d.items.forEach(i => {
+                const fila = el('div', 'luz')
+                const cuerpo = el('div')
+                cuerpo.append(el('div', 'luz__nombre', i.nombre), el('div', '', i.detalle))
+                if (i.queHacer) cuerpo.append(el('div', 'luz__hacer', 'Qué hacer: ' + i.queHacer))
+                fila.append(el('span', 'luz__punto luz__punto--' + i.estado), cuerpo)
+                lista.append(fila)
+            })
+            $('#btn-loyverse').hidden = !(rol === 'admin' && d.items.some(i => i.id === 'recibos' && i.estado !== 'verde'))
+            return d
+        }
+        $('#btn-revisar').addEventListener('click', () => cargarEstado().catch(() => {}))
+        $('#btn-loyverse').addEventListener('click', async () => {
+            try { const r = await api('/api/panel', { accion: 'reintentar-loyverse' }); alertar($('#estado-lista'), `Se enviaron ${r.registrados} de ${r.reintentados} venta(s).`) } catch (e) { alertar($('#estado-lista'), e.message, true) }
+            cargarEstado().catch(() => {})
+        })
+        function alertar(antesDe, texto, error) { const a = el('p', 'aviso' + (error ? ' aviso--error' : ''), texto); antesDe.prepend(a) }
+        setInterval(() => { if (pin && !$('#v-app').hidden) cargarEstado().catch(() => {}) }, 60000)
+
+        const red = () => { $('#sinred').hidden = navigator.onLine }
+        addEventListener('online', red); addEventListener('offline', red); red()
+
+        /* ---------- Escáner ---------- */
+        function sonar(bien) {
+            try {
+                const ctx = sonar.ctx ||= new (window.AudioContext || window.webkitAudioContext)()
+                const o = ctx.createOscillator(), g = ctx.createGain()
+                o.frequency.value = bien ? 880 : 220; g.gain.value = 0.2
+                o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + (bien ? 0.15 : 0.5))
+            } catch {}
+            if (navigator.vibrate) navigator.vibrate(bien ? 80 : [150, 80, 150])
+        }
+        function mostrar(clase, titulo, detalle) {
+            const r = $('#resultado'); r.hidden = false; r.className = 'resultado resultado--' + clase
+            r.textContent = titulo; if (detalle) r.append(el('small', '', detalle))
+            sonar(clase === 'ok')
+        }
+        function ofrecerGrupo(n, token) {
+            const b = $('#btn-grupo'); b.hidden = !n
+            if (!n) return
+            b.textContent = n === 1 ? 'Dar ingreso también a 1 acompañante' : `Dar ingreso también a los ${n} acompañantes`
+            b.onclick = async () => {
+                b.hidden = true
+                try { const d = await api('/api/validar-boleto', { token, grupo: true }); mostrar('ok', 'PUEDEN PASAR', d.mensaje); cargarEstado().catch(() => {}) }
+                catch (e) { mostrar('malo', 'Error', e.message) }
+            }
+        }
+        async function validar(token) {
+            if (ocupado || !token) return
+            ocupado = true
+            try {
+                const d = await api('/api/validar-boleto', { token })
+                const detalle = [d.nombrePase, d.orden ? 'Compra ' + d.orden : ''].filter(Boolean).join(' · ')
+                if (d.resultado === 'ok') mostrar('ok', 'PUEDE PASAR', detalle)
+                else if (d.resultado === 'usado') mostrar('malo', 'YA FUE USADO', d.usadoEn ? 'Entró a las ' + new Date(d.usadoEn).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : detalle)
+                else if (d.resultado === 'otra_fecha') mostrar('aviso', 'ES PARA OTRO DÍA', d.mensaje)
+                else mostrar('malo', 'BOLETO NO VÁLIDO', 'No deje pasar. Busque la compra por teléfono.')
+                ofrecerGrupo(['ok', 'usado'].includes(d.resultado) ? d.restantesGrupo : 0, token)
+                if (d.resultado === 'ok') cargarEstado().catch(() => {})
+            } catch (e) {
+                mostrar('malo', navigator.onLine ? 'Error' : 'SIN INTERNET', e.message)
+            } finally {
+                setTimeout(() => { ocupado = false }, 1200)
+            }
+        }
+        function apagarCamara() {
+            if (flujo) { flujo.getTracks().forEach(t => t.stop()); flujo = null }
+            $('#btn-camara').hidden = false; $('#resultado').hidden = true; $('#btn-grupo').hidden = true
+        }
+        $('#btn-camara').addEventListener('click', async () => {
+            try { flujo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }) }
+            catch { mostrar('aviso', 'No se pudo usar la cámara', 'Acepte el permiso de cámara o escriba el código de la compra'); return }
+            const video = $('#video'); video.srcObject = flujo; await video.play()
+            $('#btn-camara').hidden = true
+            try { await navigator.wakeLock?.request('screen') } catch {}
+            const detector = 'BarcodeDetector' in window ? new BarcodeDetector({ formats: ['qr_code'] }) : null
+            const lienzo = $('#lienzo'), ctx = lienzo.getContext('2d', { willReadFrequently: true })
+            const leer = async () => {
+                if (detector) return (await detector.detect(video))[0]?.rawValue
+                if (!video.videoWidth || typeof jsQR !== 'function') return null
+                const escala = Math.min(1, 640 / video.videoWidth)
+                lienzo.width = video.videoWidth * escala; lienzo.height = video.videoHeight * escala
+                ctx.drawImage(video, 0, 0, lienzo.width, lienzo.height)
+                const img = ctx.getImageData(0, 0, lienzo.width, lienzo.height)
+                return jsQR(img.data, img.width, img.height)?.data
+            }
+            const ciclo = async () => {
+                if (!flujo) return
+                try {
+                    const valor = await leer()
+                    if (valor && valor !== ultimoToken) { ultimoToken = valor; await validar(valor) }
+                    if (!valor) ultimoToken = ''
+                } catch {}
+                setTimeout(ciclo, 200)
+            }
+            ciclo()
+        })
+        $('#btn-manual').addEventListener('click', () => { $('#texto').value = $('#manual').value; $('#manual').value = ''; ir('buscar'); buscar() })
+
+        /* ---------- Buscar compras ---------- */
+        const ESTADO = { pagada: 'PAGADA', pendiente: 'SIN PAGAR' }
+        async function buscar() {
+            const aviso = $('#buscar-aviso'), lista = $('#buscar-lista')
+            aviso.hidden = true; lista.replaceChildren(); $('#buscar-boletos').replaceChildren()
+            let d
+            try { d = await api('/api/panel', { accion: 'buscar', texto: $('#texto').value.trim() }) }
+            catch (e) { aviso.hidden = false; aviso.className = 'aviso aviso--error'; aviso.textContent = e.message; return }
+            if (!d.resultados.length) { aviso.hidden = false; aviso.className = 'aviso'; aviso.textContent = 'No se encontró ninguna compra con ese dato.'; return }
+            d.resultados.forEach(c => {
+                const t = el('div', 'compra')
+                t.append(el('span', 'compra__estado compra__estado--' + c.estado, c.vencida ? 'SIN PAGAR (VENCIDA)' : ESTADO[c.estado] || c.estado))
+                t.append(el('strong', '', `${c.nombre} · compra ${c.codigo}`))
+                t.append(el('span', '', `${c.cantidad} × ${c.nombrePase} · ${colones(c.total)}`))
+                t.append(el('span', '', `Día de visita: ${c.fechaVisita}${c.esHoy ? ' (HOY)' : ''} · Ya ingresaron: ${c.ingresados} de ${c.cantidad}`))
+                const acciones = el('div', 'compra__acciones')
+                const msg = el('p', 'aviso'); msg.hidden = true
+                const decir = (texto, error) => { msg.hidden = false; msg.className = 'aviso' + (error ? ' aviso--error' : ''); msg.textContent = texto }
+
+                if (c.estado === 'pagada' && c.esHoy && c.ingresados < c.cantidad) {
+                    const b = el('button', 'boton', `Dar ingreso a ${c.cantidad - c.ingresados} persona(s)`); b.type = 'button'
+                    b.onclick = async () => { b.disabled = true; try { const r = await api('/api/panel', { accion: 'ingresar', codigo: c.codigo }); decir(r.mensaje); sonar(true); cargarEstado().catch(() => {}) } catch (e) { decir(e.message, true); b.disabled = false } }
+                    acciones.append(b)
+                }
+                if (c.estado === 'pagada' && rol === 'admin') {
+                    const b = el('button', 'boton boton--claro', 'Mostrar los boletos (QR)'); b.type = 'button'
+                    b.onclick = async () => { try { pintarBoletos((await api('/api/panel', { accion: 'boletos', codigo: c.codigo })).boletos) } catch (e) { decir(e.message, true) } }
+                    acciones.append(b)
+                }
+                if (c.estado === 'pendiente') {
+                    if (rol === 'admin') {
+                        const campo = el('input', 'campo'); campo.placeholder = 'Número de comprobante del SINPE'; campo.inputMode = 'numeric'
+                        const b = el('button', 'boton', 'Aprobar el pago a mano'); b.type = 'button'
+                        b.onclick = async () => {
+                            if (!confirm(`¿Vio en el celular del cliente un SINPE de ${colones(c.total)} a nombre del balneario?`)) return
+                            b.disabled = true
+                            try { const r = await api('/api/panel', { accion: 'aprobar', codigo: c.codigo, comprobante: campo.value }); decir('Pago aprobado. Estos son los boletos.'); pintarBoletos(r.boletos); cargarEstado().catch(() => {}) }
+                            catch (e) { decir(e.message, true); b.disabled = false }
+                        }
+                        acciones.append(el('span', '', 'Solo si el pago no se confirmó solo: revise el comprobante en el celular del cliente.'), campo, b)
+                    } else {
+                        acciones.append(el('span', '', 'Esta compra no está pagada. Si el cliente muestra el comprobante, llame a la persona encargada para aprobarla.'))
+                    }
+                }
+                t.append(acciones, msg); lista.append(t)
+            })
+        }
+        function pintarBoletos(boletos) {
+            const caja = $('#buscar-boletos'); caja.replaceChildren()
+            boletos.forEach((b, i) => {
+                const f = el('figure'); const img = el('img'); img.src = b.qr; img.alt = `QR del boleto ${i + 1}`
+                f.append(img, el('figcaption', '', `Boleto ${i + 1} de ${boletos.length}: ${b.nombrePase} · ${b.fechaVisita}`)); caja.append(f)
+            })
+            caja.scrollIntoView({ behavior: 'smooth' })
+        }
+        $('#btn-buscar').addEventListener('click', buscar)
+        $('#texto').addEventListener('keydown', e => { if (e.key === 'Enter') buscar() })
+
+        /* ---------- Inicio ---------- */
+        if (pin) cargarEstado().then(() => { $('#v-pin').hidden = true; $('#v-app').hidden = false; ir('menu') }).catch(() => {})
+    })()
+    </script>
+</body>
+</html>

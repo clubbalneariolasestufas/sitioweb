@@ -1,0 +1,27 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.eventos { @include m.grid(32rem, 2.4rem); }
+
+.evento {
+    overflow: hidden;
+    border-radius: v.$radio;
+    background: v.$blanco;
+    box-shadow: v.$sombra;
+
+    &__cabecera { padding: 2.2rem 2.6rem; background: v.$verde; color: v.$blanco; }
+    &--naranja &__cabecera { background: v.$naranja; color: v.$noche; }
+    &__fecha { margin: 0 0 0.4rem; font-weight: 600; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    &__nombre { margin: 0; font-size: 2.8rem; font-weight: 800; }
+    &__programa { @include m.reset-lista; display: grid; gap: 0.8rem; padding: 2.4rem 2.6rem; }
+    &__programa strong { color: v.$turquesa-oscuro; }
+}
+
+.eventos__vacio {
+    max-width: 60rem;
+    margin-inline: auto;
+    padding: 3rem;
+    border: 0.2rem dashed v.$turquesa;
+    border-radius: v.$radio;
+    text-align: center;
+}

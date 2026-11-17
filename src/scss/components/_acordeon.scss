@@ -1,0 +1,28 @@
+@use '../base/variables' as v;
+
+.acordeon {
+    display: grid;
+    gap: 1.2rem;
+    max-width: 82rem;
+    margin-inline: auto;
+
+    &__item {
+        border: 0.2rem solid #d4e9ec;
+        border-radius: 1.2rem;
+        background: v.$blanco;
+    }
+    &__pregunta {
+        display: flex;
+        justify-content: space-between;
+        gap: 1.6rem;
+        padding: 1.6rem 2rem;
+        font-weight: 700;
+        cursor: pointer;
+        list-style: none;
+
+        &::-webkit-details-marker { display: none; }
+        &::after { content: '+'; font-size: 2.4rem; line-height: 1; color: v.$turquesa; }
+    }
+    &__item[open] &__pregunta::after { content: '–'; }
+    &__respuesta { padding: 0 2rem 1.8rem; color: v.$gris; }
+}

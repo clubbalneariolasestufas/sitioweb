@@ -1,0 +1,22 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+.galeria {
+    @include m.grid(22rem, 1.2rem);
+
+    &__item {
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 1.2rem;
+        background: v.$crema;
+        cursor: zoom-in;
+    }
+    &__imagen {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        transition: transform 0.35s;
+    }
+    &__item:hover &__imagen { transform: scale(1.06); }
+}

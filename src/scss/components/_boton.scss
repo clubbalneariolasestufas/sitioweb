@@ -1,0 +1,27 @@
+@use '../base/variables' as v;
+
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    padding: 1.2rem 2.6rem;
+    border: 0.2rem solid v.$turquesa-oscuro;
+    border-radius: 99rem;
+    background: v.$turquesa-oscuro;
+    color: v.$blanco;
+    font: 700 1.5rem v.$fuente;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+
+    &:hover { background: v.$azul; border-color: v.$azul; transform: translateY(-0.2rem); }
+
+    &--naranja { background: v.$naranja; border-color: v.$naranja; color: v.$noche; }
+    &--naranja:hover { background: #f5a73d; border-color: #f5a73d; color: v.$noche; }
+    &--borde { background: transparent; color: v.$blanco; border-color: v.$blanco; }
+    &--borde:hover { background: v.$blanco; color: v.$noche; border-color: v.$blanco; }
+    &--completo { width: 100%; }
+}

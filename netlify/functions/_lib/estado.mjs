@@ -36,10 +36,12 @@ export async function calcularEstado(db, { conLoyverse = true } = {}) {
     } else {
         items.push(item('lector', 'Equipo lector de pagos', 'verde', `Encendido y conectado (${hace(lector.en)}).`))
         const m = lector.modem || {}
-        if (!m.conectado) items.push(item('modem', 'Módem de mensajes del banco', 'rojo', 'El módem USB no responde.', 'Revise que el módem USB esté bien conectado a la cajita. Desconéctelo y conéctelo de nuevo.'))
+        const central = m.via === 'asterisk'
+        if (central && m.estadoCentral === 'la central no responde') items.push(item('modem', 'Central telefónica y módem', 'rojo', 'La central telefónica no responde: no entran llamadas ni avisos de SINPE por SMS.', 'Desconecte la cajita de la corriente, espere 10 segundos y conéctela. Si sigue igual, avise al técnico. Los pagos se pueden aprobar a mano.'))
+        else if (!m.conectado) items.push(item('modem', central ? 'Central telefónica y módem' : 'Módem de mensajes del banco', 'rojo', 'El módem USB no responde.', 'Revise que el módem USB esté bien conectado a la cajita. Desconéctelo y conéctelo de nuevo.'))
         else if (!m.registrado) items.push(item('modem', 'Módem de mensajes del banco', 'rojo', 'El módem no tiene señal celular.', 'Revise que el chip (SIM) esté activo y con saldo o plan, y mueva el módem a un lugar con mejor señal.'))
         else if ((m.senal ?? 0) < 10) items.push(item('modem', 'Módem de mensajes del banco', 'amarillo', `Señal celular débil (${m.senal} de 31). Último mensaje: ${hace(m.ultimoSms)}.`, 'Mueva el módem cerca de una ventana o use un cable extensor USB.'))
-        else items.push(item('modem', 'Módem de mensajes del banco', 'verde', `Con señal (${m.senal} de 31${m.operador ? ', ' + m.operador : ''}). Último mensaje: ${hace(m.ultimoSms)}.`))
+        else items.push(item('modem', central ? 'Central telefónica y módem' : 'Módem de mensajes del banco', 'verde', `Con señal (${m.senal} de 31${m.operador ? ', ' + m.operador : ''})${m.enLlamada ? ', en una llamada ahora' : ''}. Último mensaje: ${hace(m.ultimoSms)}.`))
 
         const c = lector.correo || {}
         if (!c.activo) items.push(item('correo', 'Correo de confirmación del banco', 'gris', 'La lectura del correo no está configurada.'))

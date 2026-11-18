@@ -1,6 +1,7 @@
 # Servicio de arranque automático. Instalar con:
 #   sudo cp lector-sinpe.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now lector-sinpe
+# Con la central: el grupo asterisk debe existir y tener permiso sobre /var/run/asterisk/asterisk.ctl
 [Unit]
 Description=Lector SINPE del Club Las Estufas
 After=network-online.target
@@ -12,7 +13,7 @@ WorkingDirectory=/home/estufas/lector-sinpe
 ExecStart=/usr/bin/node src/index.mjs
 Restart=always
 RestartSec=10
-SupplementaryGroups=dialout
+SupplementaryGroups=dialout asterisk
 
 [Install]
 WantedBy=multi-user.target

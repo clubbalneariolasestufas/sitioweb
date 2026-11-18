@@ -164,3 +164,55 @@ test('remitente: acepta el mismo número con espacios o con prefijo del país', 
     assert.equal(aceptado('+50670701222', ['70701222']), true)
     assert.equal(aceptado('88887777', ['70701222']), false)
 })
+
+/* ---------- Puente con la central Asterisk ---------- */
+import { crearServidorSms, procesarPendientes, parsearDispositivos, consultarAsterisk } from '../src/asterisk.mjs'
+import { writeFile, readFile, mkdtemp } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+test('central: estado del módem desde «quectel show devices»', () => {
+    const salida = 'ID           Group State      RSSI Mode Submode Provider Name  Model\nquectel0     0     Free       24   0    0       kolbi          SIM7600\n'
+    assert.deepEqual(parsearDispositivos(salida), { conectado: true, registrado: true, senal: 24, estadoCentral: 'Free', enLlamada: false })
+    assert.equal(parsearDispositivos(salida.replace('Free ', 'Ring ')).enLlamada, true)
+    assert.equal(parsearDispositivos('quectel0     0     Not connected\n').conectado, false)
+    assert.equal(parsearDispositivos('quectel0     0     Free       99   0\n').registrado, false, 'RSSI 99 = sin señal')
+    assert.equal(parsearDispositivos('').estadoCentral, 'no encontrado')
+})
+
+test('central: el servidor de SMS exige el token y entrega el texto', async () => {
+    const recibidos = []
+    const s = crearServidorSms({ token: 'x'.repeat(32), onSms: async m => { recibidos.push(m) }, log: { error() {} } })
+    await new Promise(ok => s.listen(0, '127.0.0.1', ok))
+    const url = `http://127.0.0.1:${s.address().port}/sms`
+    const post = cuerpo => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: cuerpo })
+    const texto = 'Ha recibido 3,000.00 Colones de MARIA PRUEBA por SINPE Movil, 2KB6QY . Referencia 966000777.'
+    assert.equal((await post(new URLSearchParams({ token: 'malo', de: '70701222', txt: texto }))).status, 403)
+    assert.equal((await post(new URLSearchParams({ token: 'x'.repeat(32), de: '70701222', txt: texto }))).status, 200)
+    assert.equal(recibidos.length, 1)
+    assert.equal(recibidos[0].texto, texto)
+    assert.equal((await fetch(url.replace('/sms', '/otra'), { method: 'POST' })).status, 404)
+    s.close()
+    assert.throws(() => crearServidorSms({ token: 'corto', onSms() {} }))
+})
+
+test('central: procesa el archivo de pendientes y conserva lo que falla', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'sinpe-'))
+    const ruta = join(dir, 'pendientes.txt')
+    const b64 = t => Buffer.from(t).toString('base64')
+    await writeFile(ruta, `1795000000|${b64('70701222')}|${b64('texto bueno')}\n1795000001|${b64('70701222')}|${b64('texto que falla')}\n`)
+    const vistos = []
+    const n = await procesarPendientes(ruta, async m => { if (m.texto.includes('falla')) throw new Error('db'); vistos.push(m) }, { error() {} })
+    assert.equal(n, 1)
+    assert.equal(vistos[0].remitente, '70701222')
+    assert.equal(vistos[0].fecha.getTime(), 1795000000 * 1000)
+    assert.match(await readFile(ruta, 'utf8'), /^1795000001\|/)
+    assert.equal(await procesarPendientes(join(dir, 'no-existe.txt'), async () => {}), 0)
+})
+
+test('central: consulta la consola de Asterisk con -rx', async () => {
+    let args
+    const salida = await consultarAsterisk('quectel show devices', (cmd, a, o, cb) => { args = [cmd, ...a]; cb(null, 'ok') })
+    assert.deepEqual(args, ['asterisk', '-rx', 'quectel show devices'])
+    assert.equal(salida, 'ok')
+})

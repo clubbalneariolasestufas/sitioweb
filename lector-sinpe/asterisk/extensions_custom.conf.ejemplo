@@ -1,0 +1,29 @@
+; extensions_custom.conf: llamadas y SMS que llegan por el módem SIM7600G-H.
+; Copiar el contenido al final de /etc/asterisk/extensions_custom.conf (FreePBX no sobrescribe este archivo).
+; El token se define en /etc/asterisk/globals_custom.conf así:   SINPE_TOKEN=<el mismo valor de ASTERISK_TOKEN del lector>
+
+[from-quectel]
+; ---- Llamadas entrantes al 6003-4009 ----
+; Se entregan a FreePBX como si llegaran por una troncal con el número 60034009,
+; para que las maneje la Ruta entrante (horario, menú de voz y grupo de timbrado).
+exten => s,1,NoOp(Llamada por el módem desde ${CALLERID(num)})
+ same => n,Goto(from-trunk,60034009,1)
+exten => _[+0-9].,1,Goto(from-trunk,60034009,1)
+
+; ---- SMS entrantes (avisos de SINPE y cualquier otro) ----
+; El lector decide qué remitente acepta (SMS_REMITENTES=70701222); aquí se entrega todo.
+; Fork RoEdAl: el texto viene en la variable SMS (JSON).
+; Fork IchthysMaranatha: cambie la primera línea por  Set(SMS_TXT=${BASE64_DECODE(${SMS_BASE64})})
+exten => sms,1,Set(SMS_TXT=${JSON_DECODE(SMS,msg)})
+ same => n,Set(SMS_DE=${CALLERID(num)})
+ same => n,Verbose(2,SMS de ${SMS_DE}: ${SMS_TXT})
+ ; Entrega al lector por HTTP local (CURL no pasa por la consola: no hay riesgo de inyección de comandos)
+ same => n,Set(RESP=${CURL(http://127.0.0.1:8085/sms,token=${SINPE_TOKEN}&de=${URIENCODE(${SMS_DE})}&txt=${URIENCODE(${SMS_TXT})})})
+ same => n,GotoIf($["${RESP}" = "ok"]?fin)
+ ; Respaldo si el lector no respondió: solo texto en base64 (sin comillas ni caracteres peligrosos)
+ same => n,Verbose(1,Lector no respondió (${RESP}); SMS guardado en pendientes)
+ same => n,System(echo '${EPOCH}|${BASE64_ENCODE(${SMS_DE})}|${BASE64_ENCODE(${SMS_TXT})}' >> /var/spool/asterisk/sinpe/pendientes.txt)
+ same => n(fin),Hangup()
+
+exten => ussd,1,Verbose(2,USSD: ${USSD})
+ same => n,Hangup()

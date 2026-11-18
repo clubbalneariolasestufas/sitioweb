@@ -4,6 +4,15 @@ const $ = (sel, ctx = document) => ctx.querySelector(sel)
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)]
 const waLink = texto => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`
 
+// Modo de prueba interna: con ?prueba=ventas en la dirección se activa la compra en línea
+// solo en ese navegador, para que el personal pruebe antes de abrirla al público.
+try {
+    const p = new URLSearchParams(location.search).get('prueba')
+    if (p === 'ventas') sessionStorage.setItem('pruebaVentas', '1')
+    if (p === 'no') sessionStorage.removeItem('pruebaVentas')
+    if (sessionStorage.getItem('pruebaVentas') === '1') CONFIG.ventaEnLinea = true
+} catch { /* sin almacenamiento: solo vale el parámetro de esta carga */ }
+
 document.addEventListener('DOMContentLoaded', () => {
     menuMovil()
     resaltarSeccion()

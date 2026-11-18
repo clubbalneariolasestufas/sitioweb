@@ -13,8 +13,9 @@ con las dos fuentes. Cada minuto el lector reporta que está vivo; si deja de ha
 
 1. Que el banco envía un SMS por cada SINPE **recibido** al número del chip que irá en el módem.
 2. Que también puede enviar el aviso por correo a la cuenta dedicada (directo, o con reenvío automático).
-3. Guardar 3 o 4 avisos reales de cada tipo. El lector trae reglas genéricas, pero **el formato exacto depende
-   del banco** y hay que probarlo con avisos reales antes de abrir la venta.
+3. Guardar 3 o 4 avisos reales de cada tipo. El formato del SMS de SINPE (remitente 7070 1222) ya está
+   incluido y probado: «Ha recibido 4,500.00 Colones de NOMBRE por SINPE Movil, DESCRIPCION. Referencia ...».
+   El formato del correo todavía hay que probarlo con avisos reales antes de abrir la venta.
 
 ## Instalación en el Raspberry (Raspberry Pi OS)
 
@@ -70,6 +71,6 @@ expresiones regulares: `entrante` (texto que solo aparece en dinero recibido), `
 
 ## Qué no se ha probado todavía
 
-El código tiene 10 pruebas automáticas (interpretación de avisos, cola de comandos del módem, conciliación de
+El código tiene 15 pruebas automáticas (interpretación de avisos, cola de comandos del módem, conciliación de
 pagos), pero se escribió sin el módem ni el banco reales. Falta probar en el Raspberry: el modelo de módem,
 el formato de los SMS y correos del banco, y la reconexión tras un corte de energía o de internet.

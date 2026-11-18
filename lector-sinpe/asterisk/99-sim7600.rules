@@ -1,0 +1,5 @@
+# /etc/udev/rules.d/99-sim7600.rules
+# Nombres fijos para los puertos del SIM7600G-H (VID 1e0e, PID 9001), con permiso para el grupo dialout (lector y, desde la Fase C, Asterisk).
+# Verifique el número de interfaz con:  udevadm info -q property -n /dev/ttyUSB2 | grep INTERFACE_NUM
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9001", ENV{ID_USB_INTERFACE_NUM}=="02", SYMLINK+="sim7600-at", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9001", ENV{ID_USB_INTERFACE_NUM}=="04", SYMLINK+="sim7600-audio", GROUP="dialout", MODE="0660"

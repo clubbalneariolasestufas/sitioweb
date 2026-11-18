@@ -122,6 +122,8 @@ permiten contraseñas de aplicación y se necesita OAuth.
 
 Mientras `ventaEnLinea` sea `false`, el formulario de entradas arma un pedido por WhatsApp y nada depende del backend.
 
+Prueba interna sin abrir la venta al público: abra el sitio con `?prueba=ventas` al final de la dirección. La compra en línea se activa solo en ese navegador hasta cerrar la pestaña; `?prueba=no` la apaga.
+
 ## Modo práctica (para probar y capacitar al personal)
 
     npm install

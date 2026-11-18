@@ -1,0 +1,29 @@
+; quectel.conf para el módem Waveshare SIM7600G-H del Club Las Estufas.
+; Copiar a /etc/asterisk/quectel.conf. Las claves siguen el ejemplo del fork RoEdAl/asterisk-chan-quectel;
+; compárelas con el quectel.conf que trae la versión que compile y ajuste lo que cambie.
+
+[general]
+interval=15                        ; segundos entre intentos de conexión con el módem
+smsdb=/var/lib/asterisk/smsdb      ; base local de SMS (partes de mensajes largos)
+csmsttl=600
+
+[defaults]
+context=from-quectel               ; contexto de extensions_custom.conf (llamadas y SMS)
+group=0
+rxgain=0
+txgain=0
+resetquectel=yes
+autodeletesms=yes                  ; el SMS se borra del módem cuando Asterisk ya lo entregó al plan de marcado
+disablesms=no                      ; SMS activos: los avisos de SINPE llegan por aquí
+callwaiting=auto
+initstate=start
+dtmf=relax                         ; necesario para el menú de voz (marcar 1, 2, 0)
+language=es
+
+[quectel0]
+; Puertos fijos creados por la regla 99-sim7600.rules (no cambian al reiniciar)
+data=/dev/sim7600-at               ; comandos AT (interfaz 02, normalmente /dev/ttyUSB2)
+audio=/dev/sim7600-audio           ; audio de las llamadas (interfaz 04, normalmente /dev/ttyUSB4)
+; Si el audio por puerto serie falla, pruebe el modo UAC (audio USB) del fork RoEdAl:
+;uac=on
+;alsadev=hw:Android

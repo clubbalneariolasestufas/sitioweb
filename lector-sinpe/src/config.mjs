@@ -9,6 +9,13 @@ export const cfg = {
     mongoDb: e.MONGODB_DB || 'las_estufas',
 
     modemActivo: e.MODEM_ACTIVO !== 'false',
+    // modem = el lector abre el módem directamente (sin central).
+    // asterisk = la central maneja el módem y le entrega los SMS al lector por HTTP local.
+    smsFuente: (e.SMS_FUENTE || 'modem').toLowerCase(),
+    asteriskPuerto: Number(e.ASTERISK_PUERTO_HTTP || 8085),
+    asteriskToken: e.ASTERISK_TOKEN || '',
+    asteriskDispositivo: e.ASTERISK_DISPOSITIVO || 'quectel0',
+    asteriskPendientes: e.ASTERISK_PENDIENTES || '/var/spool/asterisk/sinpe/pendientes.txt',
     modemPuerto: e.MODEM_PORT || '/dev/ttyUSB0',
     modemBaud: Number(e.MODEM_BAUD || 115200),
     simPin: e.SIM_PIN || '',

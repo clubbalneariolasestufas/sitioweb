@@ -28,9 +28,11 @@ function aplicar(doc, upd) {
     for (const [k, v] of Object.entries(upd.$inc || {})) doc[k] = (doc[k] || 0) + v
     for (const k of Object.keys(upd.$unset || {})) delete doc[k]
     for (const [k, v] of Object.entries(upd.$addToSet || {})) { doc[k] ??= []; if (!doc[k].includes(v)) doc[k].push(v) }
+    for (const [k, v] of Object.entries(upd.$push || {})) { doc[k] ??= []; doc[k].push(v) }
+    for (const [k, v] of Object.entries(upd.$pull || {})) { if (Array.isArray(doc[k])) doc[k] = doc[k].filter(x => x !== v) }
 }
 
-const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id' }
+const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id', cotizaciones: 'codigo' }
 
 export function crearDbFalsa() {
     const datos = {}
@@ -55,8 +57,9 @@ export function crearDbFalsa() {
                 return cursor
             },
             async countDocuments(f) { return filas.filter(d => coincide(d, f)).length },
-            async findOneAndUpdate(f, upd) {
-                const d = filas.find(x => coincide(x, f))
+            async findOneAndUpdate(f, upd, opciones = {}) {
+                let d = filas.find(x => coincide(x, f))
+                if (!d && opciones.upsert) { d = { ...f }; filas.push(d) }
                 if (!d) return null
                 aplicar(d, upd)
                 return structuredClone(d)

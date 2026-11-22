@@ -33,6 +33,21 @@ export async function enviarBoletos({ para, orden, boletos }) {
     }
 }
 
+// Correo de texto simple (avisos de eventos). Nunca lanza error.
+export async function enviarCorreo({ para, asunto, texto }) {
+    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_APP_PASSWORD, MAIL_FROM } = process.env
+    if (!para || !SMTP_HOST || !SMTP_USER || !SMTP_APP_PASSWORD) return false
+    try {
+        const puerto = Number(SMTP_PORT || 465)
+        const transporte = nodemailer.createTransport({ host: SMTP_HOST, port: puerto, secure: puerto === 465, auth: { user: SMTP_USER, pass: SMTP_APP_PASSWORD } })
+        await transporte.sendMail({ from: MAIL_FROM || SMTP_USER, to: para, subject: asunto, text: texto })
+        return true
+    } catch (e) {
+        console.error('No se pudo enviar el correo:', e.message)
+        return false
+    }
+}
+
 // Aviso al correo del club cuando se pierde una conexión importante.
 export async function enviarAlerta(asunto, texto) {
     const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_APP_PASSWORD, MAIL_FROM, CLUB_EMAIL } = process.env

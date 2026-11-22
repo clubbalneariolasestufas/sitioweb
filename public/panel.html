@@ -91,6 +91,7 @@
                     <button class="boton boton--menu" type="button" data-ir="escanear">Escanear boletos<small>Para la entrada: lea el código QR del cliente</small></button>
                     <button class="boton boton--menu boton--claro" type="button" data-ir="buscar">Buscar una compra<small>Cliente sin QR, o que dice que ya pagó</small></button>
                     <button class="boton boton--menu boton--claro" type="button" data-ir="estado">Estado del sistema<small>Ver si todo está conectado</small></button>
+                    <a id="ir-eventos" class="boton boton--menu boton--claro" href="/eventos" hidden style="text-decoration:none">Eventos y cotizaciones<small>Calendario de grupos, estados y tareas del personal</small></a>
                     <button id="salir" class="boton boton--linea" type="button">Cerrar sesión</button>
                 </section>
 
@@ -194,6 +195,7 @@
                 fila.append(el('span', 'luz__punto luz__punto--' + i.estado), cuerpo)
                 lista.append(fila)
             })
+            $('#ir-eventos').hidden = rol !== 'admin'
             $('#btn-loyverse').hidden = !(rol === 'admin' && d.items.some(i => i.id === 'recibos' && i.estado !== 'verde'))
             return d
         }

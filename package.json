@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "gulp",
     "build": "gulp build",
-    "test": "node --test tests/funciones.test.mjs",
+    "test": "node --test tests/funciones.test.mjs tests/cotizaciones.test.mjs",
     "demo": "node scripts/demo.mjs"
   },
   "license": "ISC",

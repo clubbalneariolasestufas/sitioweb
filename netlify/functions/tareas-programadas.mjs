@@ -2,12 +2,15 @@ import { getDb } from './_lib/db.mjs'
 import { calcularEstado } from './_lib/estado.mjs'
 import { reintentarPendientes } from './_lib/loyverse.mjs'
 import { enviarAlerta } from './_lib/correo.mjs'
+import { vencerCotizaciones, resumenDiario } from './_lib/cotizaciones.mjs'
 
 // Cada 30 minutos: envía a Loyverse las ventas pendientes y avisa por correo si algo está en rojo
 // (como máximo un correo cada 6 horas).
 export default async () => {
     const db = await getDb()
     await reintentarPendientes(db, 20)
+    await vencerCotizaciones(db)
+    await resumenDiario(db)
     const estado = await calcularEstado(db)
     const rojos = estado.items.filter(i => i.estado === 'rojo')
     if (rojos.length) {

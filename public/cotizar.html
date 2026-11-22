@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cotizar grupo o evento | Club Balneario Las Estufas</title>
+    <meta name="description" content="Cotice en línea su excursión, actividad de empresa, cumpleaños o convivio en el Club Balneario Las Estufas. Vea el precio al instante desde el celular.">
+    <meta name="theme-color" content="#051c39">
+    <link rel="icon" type="image/png" href="build/img/favicon-64.png">
+    <link rel="apple-touch-icon" href="build/img/favicon-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="build/css/app.css">
+</head>
+<body class="cot-pagina">
+    <header class="cot-cabecera">
+        <a class="cot-cabecera__volver" href="./#reservas" aria-label="Volver al sitio">‹</a>
+        <div class="cot-cabecera__textos">
+            <span class="cot-cabecera__antetitulo">Grupos y eventos</span>
+            <h1 class="cot-cabecera__titulo" id="titulo-paso">Cotice su actividad</h1>
+        </div>
+        <a class="cot-cabecera__seguimiento" href="#seguimiento" data-ver="seguimiento">Mi solicitud</a>
+    </header>
+
+    <div class="cot-progreso" aria-hidden="true"><span id="progreso-barra"></span></div>
+    <p class="cot-ejemplo" id="aviso-ejemplo" hidden>Precios de ejemplo mientras se publican los oficiales. La administración confirma el monto final.</p>
+
+    <main class="cot" id="asistente">
+        <form id="form-cot" novalidate>
+            <p class="formulario__trampa" aria-hidden="true"><label>No llenar: <input name="web" tabindex="-1" autocomplete="off"></label></p>
+
+            <!-- 1. Actividad -->
+            <section class="cot-paso" data-paso="1" data-titulo="¿Qué actividad planea?">
+                <p class="cot-paso__ayuda">Elija la que más se parezca. Puede contarnos detalles al final.</p>
+                <div class="cot-tarjetas" id="tipos" role="radiogroup" aria-label="Tipo de actividad"></div>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="institucion">Escuela, empresa o grupo (opcional)</label>
+                    <input class="formulario__control" id="institucion" name="institucion" maxlength="80" autocomplete="organization">
+                </div>
+            </section>
+
+            <!-- 2. Fecha -->
+            <section class="cot-paso" data-paso="2" data-titulo="¿Qué día?" hidden>
+                <p class="cot-paso__ayuda">Los días en gris están cerrados o llenos. Si un área ya está apartada, se lo indicamos.</p>
+                <div class="cot-mes">
+                    <button type="button" class="cot-mes__flecha" id="mes-ant" aria-label="Semanas anteriores">‹</button>
+                    <span id="mes-nombre" class="cot-mes__nombre"></span>
+                    <button type="button" class="cot-mes__flecha" id="mes-sig" aria-label="Semanas siguientes">›</button>
+                </div>
+                <div class="cot-calendario" id="calendario" role="grid" aria-label="Fechas disponibles"></div>
+                <p class="formulario__nota" id="fecha-elegida" role="status"></p>
+                <div class="formulario__fila formulario__fila--doble cot-horas">
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="hora-inicio">Hora de llegada</label>
+                        <input class="formulario__control" id="hora-inicio" type="time" value="09:00" step="900">
+                    </div>
+                    <div class="formulario__campo">
+                        <label class="formulario__etiqueta" for="hora-fin">Hora de salida</label>
+                        <input class="formulario__control" id="hora-fin" type="time" value="16:00" step="900">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Personas -->
+            <section class="cot-paso" data-paso="3" data-titulo="¿Cuántas personas vienen?" hidden>
+                <p class="cot-paso__ayuda">Un número aproximado está bien. La cantidad final se confirma 3 días antes.</p>
+                <div id="contadores" class="cot-contadores"></div>
+            </section>
+
+            <!-- 4. Áreas y alimentación -->
+            <section class="cot-paso" data-paso="4" data-titulo="Áreas y alimentación" hidden>
+                <h2 class="cot-subtitulo">Áreas</h2>
+                <p class="cot-paso__ayuda">Las piscinas y los senderos ya están incluidos con la entrada.</p>
+                <div id="areas" class="cot-lista"></div>
+                <div class="formulario__campo" id="campo-horas-tenis" hidden>
+                    <label class="formulario__etiqueta" for="horas-tenis">Horas de cancha de tenis</label>
+                    <input class="formulario__control" id="horas-tenis" type="number" min="1" max="8" value="1" inputmode="numeric">
+                </div>
+                <h2 class="cot-subtitulo">Alimentación</h2>
+                <div id="menus" class="cot-lista" role="radiogroup" aria-label="Alimentación"></div>
+                <h2 class="cot-subtitulo">Extras</h2>
+                <div id="extras" class="cot-lista"></div>
+            </section>
+
+            <!-- 5. Contacto -->
+            <section class="cot-paso" data-paso="5" data-titulo="¿A quién le enviamos la cotización?" hidden>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="nombre">Nombre de la persona encargada</label>
+                    <input class="formulario__control" id="nombre" maxlength="80" autocomplete="name" required>
+                </div>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="telefono">WhatsApp</label>
+                    <input class="formulario__control" id="telefono" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" required placeholder="8888-8888">
+                </div>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="correo">Correo (opcional)</label>
+                    <input class="formulario__control" id="correo" type="email" maxlength="120" autocomplete="email">
+                </div>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="comentarios">¿Algo más que debamos saber? (opcional)</label>
+                    <textarea class="formulario__control" id="comentarios" maxlength="600" placeholder="Alergias, actividades, necesidades de accesibilidad…"></textarea>
+                </div>
+            </section>
+
+            <!-- 6. Resumen -->
+            <section class="cot-paso" data-paso="6" data-titulo="Revise y envíe" hidden>
+                <div class="cot-resumen" id="resumen"></div>
+                <ul class="cot-condiciones">
+                    <li>La fecha queda <strong>apartada 2 días</strong> mientras le enviamos la cotización final.</li>
+                    <li>La cotización vale <strong>15 días</strong>. Para reservar se paga el <strong>50 %</strong> por SINPE Móvil.</li>
+                    <li>La cantidad final de personas se confirma <strong>3 días antes</strong> y el saldo se paga 2 días antes.</li>
+                </ul>
+                <p id="cot-error" class="formulario__mensaje formulario__mensaje--error" hidden role="alert"></p>
+            </section>
+        </form>
+
+        <!-- Listo -->
+        <section class="cot-listo" id="listo" hidden>
+            <div class="cot-listo__sello" aria-hidden="true">✓</div>
+            <h2>¡Solicitud enviada!</h2>
+            <p>Su código es</p>
+            <p class="cot-listo__codigo" id="listo-codigo"></p>
+            <p id="listo-texto"></p>
+            <div class="cot-listo__acciones">
+                <button type="button" class="boton boton--completo" id="copiar-codigo">Copiar el código</button>
+                <a class="boton boton--naranja boton--completo" href="#seguimiento" data-ver="seguimiento">Ver el estado de mi solicitud</a>
+                <a class="cot-enlace" href="./">Volver al sitio</a>
+            </div>
+        </section>
+
+        <!-- Seguimiento -->
+        <section class="cot-seguimiento" id="seguimiento" hidden>
+            <h2 class="cot-subtitulo">Estado de su solicitud</h2>
+            <form id="form-seguimiento" class="formulario">
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="seg-codigo">Código</label>
+                    <input class="formulario__control" id="seg-codigo" placeholder="COT-2026-001" autocapitalize="characters" autocomplete="off" required>
+                </div>
+                <div class="formulario__campo">
+                    <label class="formulario__etiqueta" for="seg-tel">Últimos 4 números de su teléfono</label>
+                    <input class="formulario__control" id="seg-tel" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>
+                </div>
+                <button class="boton boton--completo" type="submit">Consultar</button>
+                <p id="seg-error" class="formulario__mensaje formulario__mensaje--error" hidden role="alert"></p>
+            </form>
+            <div id="seg-resultado" class="cot-estado" hidden></div>
+            <a class="cot-enlace" href="#" data-ver="asistente">Hacer una nueva cotización</a>
+        </section>
+    </main>
+
+    <footer class="cot-barra" id="barra">
+        <div class="cot-barra__total">
+            <span class="cot-barra__etiqueta" id="barra-personas">Total estimado</span>
+            <span class="cot-barra__monto" id="barra-total" aria-live="polite">₡0</span>
+            <span class="cot-barra__adelanto" id="barra-adelanto">Adelanto para reservar: ₡0</span>
+        </div>
+        <div class="cot-barra__botones">
+            <button type="button" class="cot-barra__atras" id="btn-atras" aria-label="Paso anterior">‹</button>
+            <button type="button" class="boton boton--naranja" id="btn-siguiente">Siguiente</button>
+        </div>
+    </footer>
+
+    <script type="module" src="build/js/cotizar.js"></script>
+</body>
+</html>

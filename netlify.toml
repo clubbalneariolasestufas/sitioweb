@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/eventos"
+  to = "/eventos.html"
+  status = 200
+
+[[redirects]]
   from = "/puerta"
   to = "/panel.html"
   status = 200
@@ -40,6 +45,12 @@
 
 [[headers]]
   for = "/panel.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/eventos.html"
   [headers.values]
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"

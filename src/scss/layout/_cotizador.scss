@@ -1,0 +1,164 @@
+@use '../base/variables' as v;
+@use '../base/mixins' as m;
+
+// Página de cotización de grupos y eventos (cotizar.html). Pensada primero para celular.
+$alto-barra: 9.6rem;
+
+.cot-pagina { background: #f4f9f7; min-height: 100vh; padding-bottom: calc(#{$alto-barra} + env(safe-area-inset-bottom, 0px)); }
+
+.cot-cabecera {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.2rem;
+    padding: max(1.2rem, env(safe-area-inset-top, 0px)) max(1.6rem, env(safe-area-inset-right, 0px)) 1.2rem max(1.6rem, env(safe-area-inset-left, 0px));
+    background: v.$noche; color: v.$blanco;
+
+    &__volver { display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border-radius: 50%; font-size: 3rem; line-height: 1; text-decoration: none; background: rgba(v.$blanco, .08); }
+    &__antetitulo { display: block; font-size: 1.2rem; letter-spacing: .08em; text-transform: uppercase; color: v.$celeste; }
+    &__titulo { margin: 0; font-size: clamp(1.8rem, 4.4vw, 2.4rem); line-height: 1.2; text-wrap: balance; }
+    &__seguimiento { padding: .8rem 1.4rem; border: .2rem solid rgba(v.$blanco, .4); border-radius: 99rem; font-size: 1.3rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+}
+
+.cot-progreso { height: .5rem; background: rgba(v.$noche, .1);
+    span { display: block; height: 100%; width: 0; background: v.$naranja; transition: width .3s; }
+}
+.cot-ejemplo { margin: 0; padding: .8rem 1.6rem; background: #fdf1dc; color: #6b4a10; font-size: 1.3rem; font-weight: 600; text-align: center; }
+
+.cot { width: min(100%, 64rem); margin-inline: auto; padding: 2rem max(1.6rem, env(safe-area-inset-right, 0px)) 3rem max(1.6rem, env(safe-area-inset-left, 0px)); }
+.cot-paso { display: grid; gap: 1.8rem;
+    &__ayuda { margin: 0; color: v.$gris; }
+}
+.cot-subtitulo { margin: 1rem 0 0; font-size: 1.5rem; letter-spacing: .06em; text-transform: uppercase; color: v.$turquesa-oscuro; }
+
+// Paso 1
+.cot-tarjetas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem;
+    @include m.tablet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.cot-tarjeta {
+    display: flex; flex-direction: column; align-items: flex-start; gap: .8rem; min-height: 10.4rem; padding: 1.6rem;
+    border: .2rem solid #d5e6e9; border-radius: v.$radio; background: v.$blanco; color: v.$texto;
+    font: 700 1.6rem v.$fuente; text-align: left; cursor: pointer; transition: border-color .2s, transform .2s;
+    &:hover { border-color: v.$turquesa; }
+    &[aria-checked='true'] { border-color: v.$turquesa-oscuro; background: v.$turquesa-oscuro; color: v.$blanco; }
+    &:focus-visible { outline: .3rem solid v.$naranja; outline-offset: .2rem; }
+    &__icono { font-size: 2.8rem; line-height: 1; }
+}
+
+// Paso 2
+.cot-mes { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    &__nombre { font-weight: 800; text-transform: capitalize; }
+    &__flecha { width: 4.4rem; height: 4.4rem; border: .2rem solid #d5e6e9; border-radius: 50%; background: v.$blanco; font-size: 2.4rem; color: v.$turquesa-oscuro; cursor: pointer;
+        &:disabled { opacity: .35; cursor: default; }
+    }
+}
+.cot-calendario { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .5rem;
+    &__dia-semana { font-size: 1.2rem; font-weight: 700; color: v.$gris; text-align: center; }
+}
+.cot-dia {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; min-height: 5.6rem; padding: .4rem .2rem;
+    border: .15rem solid #d5e6e9; border-radius: 1rem; background: v.$blanco; color: v.$texto; font-family: v.$fuente; cursor: pointer;
+    &__num { font-weight: 800; font-size: 1.7rem; line-height: 1.1; }
+    &__estado { font-size: 1rem; font-weight: 600; color: v.$verde; }
+    &--parcial .cot-dia__estado { color: #a8650a; }
+    &--no { background: #eef2f3; color: #9aaab3; border-style: dashed; cursor: default; .cot-dia__estado { color: #9aaab3; } }
+    &--elegido { border-color: v.$turquesa-oscuro; background: v.$turquesa-oscuro; color: v.$blanco; .cot-dia__estado { color: v.$menta; } }
+    &:focus-visible { outline: .3rem solid v.$naranja; }
+}
+.cot-horas { margin-top: .4rem; }
+
+// Paso 3
+.cot-contadores { display: grid; gap: .4rem; &__total { margin: 1rem 0 0; font-weight: 700; color: v.$turquesa-oscuro; } }
+.cot-contador {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: 1.2rem 0; border-bottom: .1rem solid #dbe8ea;
+    &__nombre { display: block; font-weight: 700; }
+    &__precio { font-size: 1.3rem; color: v.$gris; }
+    &__control { display: flex; align-items: center; gap: .6rem; }
+    &__btn { width: 4.8rem; height: 4.8rem; border: .2rem solid #b9cfd5; border-radius: 1.2rem; background: v.$blanco; font-size: 2.4rem; color: v.$turquesa-oscuro; cursor: pointer;
+        &--mas { background: v.$turquesa-oscuro; border-color: v.$turquesa-oscuro; color: v.$blanco; }
+    }
+    &__num { width: 6rem; height: 4.8rem; border: .2rem solid #dbe8ea; border-radius: 1rem; font: 800 1.8rem v.$fuente; text-align: center; color: v.$texto; -moz-appearance: textfield;
+        &::-webkit-inner-spin-button, &::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    }
+}
+
+// Paso 4
+.cot-lista { display: grid; gap: .8rem; }
+.cot-opcion {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.2rem; min-height: 5.6rem; padding: 1.2rem 1.4rem;
+    border: .2rem solid #dbe8ea; border-radius: 1.2rem; background: v.$blanco; cursor: pointer;
+    input { width: 2.2rem; height: 2.2rem; accent-color: v.$turquesa-oscuro; }
+    &:has(input:checked) { border-color: v.$turquesa-oscuro; background: #eef8f9; }
+    &:has(input:focus-visible) { outline: .3rem solid v.$naranja; }
+    &--no { opacity: .55; cursor: not-allowed; }
+    &__titulo { display: block; font-weight: 700; }
+    &__detalle { display: block; font-size: 1.3rem; color: v.$gris; }
+    &__precio { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+}
+
+// Paso 6
+.cot-resumen { display: grid; gap: 1.6rem; padding: 1.8rem; border-radius: v.$radio; background: v.$blanco; box-shadow: v.$sombra;
+    &__datos { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem 1.4rem; margin: 0;
+        dt { color: v.$gris; } dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+    }
+}
+.cot-desglose { width: 100%; border-collapse: collapse; font-size: 1.5rem;
+    td { padding: .7rem 0; border-top: .1rem solid #e3edef; vertical-align: top; }
+    &__monto { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 1rem; }
+    tfoot td { color: v.$gris; }
+    &__total td { padding-top: 1.1rem; font-size: 1.9rem; font-weight: 800; color: v.$noche; border-top: .2rem solid v.$noche; }
+}
+.cot-condiciones { margin: 0; padding-left: 2rem; color: v.$gris; font-size: 1.4rem; display: grid; gap: .6rem; }
+
+// Barra fija con el total en vivo
+.cot-barra {
+    position: fixed; inset: auto 0 0; z-index: 20;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1.2rem;
+    min-height: $alto-barra;
+    padding: 1.2rem max(1.6rem, env(safe-area-inset-right, 0px)) calc(1.2rem + env(safe-area-inset-bottom, 0px)) max(1.6rem, env(safe-area-inset-left, 0px));
+    background: v.$noche; color: v.$blanco; box-shadow: 0 -.6rem 2rem rgba(v.$noche, .25);
+    &__total { display: flex; flex-direction: column; min-width: 0; }
+    &__etiqueta { font-size: 1.2rem; color: v.$celeste; }
+    &__monto { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+    &__adelanto { font-size: 1.2rem; color: rgba(v.$blanco, .8); }
+    &__botones { display: flex; gap: .8rem; align-items: center; }
+    &__atras { width: 4.8rem; height: 4.8rem; border: .2rem solid rgba(v.$blanco, .5); border-radius: 50%; background: transparent; color: v.$blanco; font-size: 2.6rem; cursor: pointer; }
+    .boton { padding: 1.3rem 2rem; }
+    .boton[aria-disabled='true'] { opacity: .6; }
+}
+@media (min-width: v.$tablet) {
+    .cot-barra { grid-template-columns: minmax(0, 64rem); justify-content: center;
+        & > * { grid-column: 1; grid-row: 1; } &__botones { justify-self: end; }
+    }
+}
+
+.cot-aviso { position: fixed; left: 50%; bottom: calc(#{$alto-barra} + 1.2rem + env(safe-area-inset-bottom, 0px)); z-index: 30; transform: translateX(-50%);
+    width: min(92%, 48rem); padding: 1.2rem 1.6rem; border-radius: 1.2rem; background: #8f1d1d; color: v.$blanco; font-weight: 600; text-align: center; box-shadow: v.$sombra; }
+
+// Listo y seguimiento
+.cot-listo { display: grid; justify-items: center; gap: .6rem; padding-top: 2rem; text-align: center;
+    &__sello { display: grid; place-items: center; width: 7.2rem; height: 7.2rem; border-radius: 50%; background: v.$verde; color: v.$blanco; font-size: 3.6rem; }
+    &__codigo { margin: 0; padding: 1rem 2rem; border: .2rem dashed v.$turquesa-oscuro; border-radius: 1.2rem; font-size: 2.6rem; font-weight: 800; letter-spacing: .06em; color: v.$turquesa-oscuro; user-select: all; }
+    &__acciones { display: grid; gap: 1.2rem; width: 100%; max-width: 40rem; margin-top: 1.6rem; }
+}
+.cot-enlace { display: block; margin-top: 1.6rem; text-align: center; font-weight: 700; color: v.$turquesa-oscuro; }
+.cot-seguimiento { display: grid; gap: 1.6rem; }
+.cot-estado { display: grid; gap: 1.2rem; padding: 1.8rem; border-radius: v.$radio; background: v.$blanco; box-shadow: v.$sombra;
+    p { margin: 0; }
+    &__codigo { font-weight: 800; font-size: 1.8rem; color: v.$noche; }
+    &__fecha { color: v.$gris; }
+    &__alerta { justify-self: start; padding: .4rem 1.2rem; border-radius: 99rem; background: #fde7e7; color: #8f1d1d; font-weight: 800; }
+    &__mensaje { padding: 1.2rem; border-radius: 1rem; background: #eef8f9; }
+}
+.cot-linea { @include m.reset-lista; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; counter-reset: paso;
+    &__paso { position: relative; padding-top: 3.2rem; font-size: 1.05rem; font-weight: 700; text-align: center; color: v.$gris; letter-spacing: -.01em;
+        &::before { counter-increment: paso; content: counter(paso); position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: #e3edef; color: v.$gris; }
+        &--hecho::before { content: '✓'; background: v.$verde; color: v.$blanco; }
+        &--actual { color: v.$noche; &::before { background: v.$naranja; color: v.$noche; } }
+    }
+}
+
+// Llamado a cotizar dentro del sitio (sección Reservaciones)
+.reservas__cotizar { margin-top: 2.4rem; padding: 2rem; border-radius: v.$radio; background: rgba(v.$blanco, .08); border: .2rem solid rgba(v.$celeste, .4);
+    h3 { color: v.$naranja; }
+    p { color: rgba(v.$blanco, .85); }
+    .boton { margin: .4rem .8rem .4rem 0; }
+}

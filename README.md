@@ -108,7 +108,21 @@ permiten contraseñas de aplicación y se necesita OAuth.
 | `POST /api/validar-boleto` | Personal | Marca un boleto como usado. Con `grupo: true` da ingreso a los acompañantes de la misma compra. |
 | `POST /api/panel` | Personal | `buscar`, `ingresar` (PIN de puerta); `aprobar`, `boletos`, `reintentar-loyverse` (PIN de administración). |
 | `POST /api/estado` | Personal | Semáforo de conexiones: base de datos, lector, módem, correo, Loyverse y recibos pendientes. |
-| `tareas-programadas` | Automática | Cada 30 minutos reenvía a Loyverse lo pendiente y manda un correo si algo está en rojo. |
+| `POST /api/cotizaciones` | Cliente | Crea una solicitud de cotización de grupo (COT-2026-001). Recalcula el monto y aparta la fecha 2 días. |
+| `GET /api/cotizaciones?codigo=&tel=` | Cliente | Seguimiento de la solicitud con el código y los últimos 4 números del teléfono. |
+| `GET /api/disponibilidad` | Cliente | Qué áreas exclusivas (rancho, salón) están apartadas cada día. Sin datos de clientes. |
+| `POST /api/eventos-admin` | Administración | `listar`, `estado` (Solicitada → Cotizada → Reservada → Confirmada → Realizada, o Cancelada), `tarea`, `calendario`. Solo PIN de administración. |
+| `GET /api/calendario.ics?k=` | Administración | Calendario privado para suscribirse desde Google Calendar: eventos y tareas del personal. |
+| `tareas-programadas` | Automática | Cada 30 minutos reenvía a Loyverse lo pendiente, vence solicitudes y cotizaciones, manda el resumen diario de eventos y avisa si algo está en rojo. |
+
+## Cotizador de grupos y eventos (etapa 3, CAM-008)
+
+- **Página pública** `cotizar.html`: asistente de 6 pasos pensado para celular, con el total en vivo abajo. Se llega desde «Reservaciones» del sitio.
+- **Panel de eventos** `/eventos` (PIN de administración; también hay un botón en `/panel`): solicitudes por atender, calendario del mes, tareas de los próximos 14 días, envío de la cotización por WhatsApp y enlace para Google Calendar.
+- **Precios**: todos en `src/js/precios-eventos.js`. Hoy son **de ejemplo** (`PRECIOS_DE_EJEMPLO = true` muestra un aviso en la página). Cuando Lexie entregue la lista real, se cambian ahí, se pone `false`, se corre `npx gulp js` y se publica. El servidor usa el mismo archivo, así que el precio nunca se desincroniza.
+- **Tareas automáticas** por evento reservado: cocina 7 días antes (si hay menú), cantidad final 3 días, saldo 2 días, preparar áreas 1 día y puerta el día del evento. Encargada por ahora: Lexie (se cambia en `PLANTILLA_TAREAS`).
+- **Variables nuevas en Netlify**: `EVENTOS_EMAIL` (correo de Lexie para solicitudes nuevas y el resumen diario; si falta, usa `CLUB_EMAIL`) y `CALENDARIO_TOKEN` (texto aleatorio de 24 caracteres o más para el enlace de Google Calendar). Generar el token: `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`.
+- **Probar en la computadora**: `node scripts/servidor-local.mjs` y abrir http://localhost:8888/cotizar.html (PIN de administración de prueba: 222222). Usa una base de datos en memoria.
 
 ## Puesta en marcha (resumen; el detalle está en la guía de integración)
 
@@ -134,7 +148,7 @@ Para simular el aviso del banco: `http://localhost:8888/demo/pago?monto=12000&co
 
 ## Pruebas
 
-    npm test                      # 16 pruebas de las funciones
+    npm test                      # 29 pruebas: entradas, pagos, panel y cotizador
     cd lector-sinpe && npm test   # 10 pruebas del lector
 
 Usan una base de datos simulada. Cubren montos distintos, pagos reutilizados, límite de intentos, órdenes vencidas, boletos falsos,

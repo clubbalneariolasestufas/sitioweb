@@ -74,7 +74,7 @@
                     <h1 class="hero__titulo">¡Un lugar para disfrutar en familia!</h1>
                     <p class="hero__texto">Piscinas, toboganes, zonas verdes y senderos con pequeñas cataratas. Pase el día en la naturaleza y entre con su código QR.</p>
                     <div class="hero__acciones">
-                        <a class="boton boton--naranja" href="#tiquetes" data-abrir-entradas>Comprar entradas</a>
+                        <a class="boton boton--naranja" href="tiquetes.html">Comprar entradas</a>
                         <a class="boton boton--borde" href="#servicios">Ver servicios</a>
                     </div>
                 </div>
@@ -145,7 +145,7 @@
                         <li>Pequeñas cataratas para disfrutar y fotografiar</li>
                         <li>Parque con zonas verdes y mucha sombra</li>
                     </ul>
-                    <a class="boton boton--naranja" href="#tiquetes" data-abrir-entradas>Visítenos: compre su entrada</a>
+                    <a class="boton boton--naranja" href="tiquetes.html">Visítenos: compre su entrada</a>
                 </div>
             </div>
         </section>
@@ -153,37 +153,36 @@
         <!-- TIQUETES -->
         <section id="tiquetes" class="seccion">
             <div class="contenedor tiquetes">
-                <h2 class="seccion__titulo">Tiquetes en línea</h2>
-                <p class="seccion__subtitulo">Escoja su pase, pague por SINPE Móvil y presente su código QR al llegar.</p>
-                <div class="pases">
-                    <article class="pase">
-                        <h3 class="pase__nombre">Pase del día</h3>
-                        <ul class="pase__incluye">
-                            <li>Uso total de instalaciones</li>
-                            <li>Hotdog o porción de pizza + refresco</li>
-                        </ul>
-                        <p class="pase__precio">₡6.000 <small>por persona</small></p>
-                        <button class="boton boton--completo" type="button" data-abrir-entradas="dia">Comprar</button>
-                    </article>
-                    <article class="pase pase--destacado">
-                        <h3 class="pase__nombre">Pase Cervecero</h3>
-                        <ul class="pase__incluye">
-                            <li>Uso total de instalaciones</li>
-                            <li>Caldoza + cerveza</li>
-                        </ul>
-                        <p class="pase__precio">₡6.000 <small>por persona</small></p>
-                        <button class="boton boton--naranja boton--completo" type="button" data-abrir-entradas="cervecero">Comprar</button>
-                    </article>
-                    <article class="pase">
-                        <h3 class="pase__nombre">Pase Económico</h3>
-                        <ul class="pase__incluye">
-                            <li>Uso total de instalaciones</li>
-                        </ul>
-                        <p class="pase__precio">₡3.000 <small>por persona</small></p>
-                        <button class="boton boton--completo" type="button" data-abrir-entradas="economico">Comprar</button>
-                    </article>
+                <h2 class="seccion__titulo">Compre su tiquete en línea</h2>
+                <p class="seccion__subtitulo">Elija el día, cuántas personas vienen y, si quiere, un rancho en el mapa. Pague por SINPE Móvil y presente su código QR al llegar.</p>
+                <div class="tiquete-cine">
+                    <div class="tiquete-cine__cuerpo">
+                        <span class="tiquete-cine__etiqueta">ADMITE UNO · TODOS LOS DÍAS</span>
+                        <h3 class="tiquete-cine__nombre">Entrada general</h3>
+                        <p class="tiquete-cine__texto">Piscina semiolímpica, piscina del tobogán, piscina accesible, senderos a las cataratas y cancha de tenis.</p>
+                        <a class="boton boton--naranja" href="tiquetes.html">Comprar tiquete</a>
+                    </div>
+                    <div class="tiquete-cine__talon">
+                        <span class="tiquete-cine__precio">₡3 500</span>
+                        <span class="tiquete-cine__unidad">por persona</span>
+                    </div>
                 </div>
-                <p class="tiquetes__nota" style="text-align:center">También puede pagar en efectivo en la entrada.</p>
+                <ul class="tiquetes__chips">
+                    <li>Menores de 4 años: gratis</li>
+                    <li>Válido solo para la fecha elegida</li>
+                    <li>También en efectivo en la entrada</li>
+                    <li>Todos los días de 8:00 a 17:00, feriados incluidos</li>
+                    <li class="tiquetes__chip--oscuro">Cerrado los miércoles</li>
+                </ul>
+                <div class="tiquetes__ranchos">
+                    <div class="tiquetes__ranchos-texto">
+                        <span class="tiquete-cine__etiqueta">OPCIONAL</span>
+                        <h3>Aparte su rancho de bambú</h3>
+                        <p>7 ranchos para hasta 8 personas cada uno, con agua propia y basurero. Sábados y domingos cuestan ₡10 000; de lunes a viernes se apartan sin costo, si hay disponibilidad.</p>
+                        <a class="boton boton--naranja" href="tiquetes.html">Comprar y elegir rancho</a>
+                    </div>
+                    <div class="tiquetes__mapa" id="mapa-inicio" aria-label="Mapa del balneario con los 7 ranchos"></div>
+                </div>
             </div>
         </section>
 
@@ -195,7 +194,7 @@
                 <div class="reservas__info">
                     <h3>¿Qué puede reservar?</h3>
                     <ul>
-                        <li><strong>Ranchos</strong> para su grupo, con reservación previa.</li>
+                        <li><strong>Ranchos de bambú</strong> para hasta 8 personas: se apartan al <a href="tiquetes.html">comprar su tiquete en línea</a>.</li>
                         <li><strong>Eventos</strong>: bailes, música con DJ, cumpleaños y actividades de empresa.</li>
                         <li><strong>Cancha de tenis</strong> profesional, por hora.</li>
                     </ul>
@@ -214,8 +213,7 @@
                         <fieldset style="border:0;padding:0;margin:0">
                             <legend class="formulario__etiqueta">¿Qué desea reservar?</legend>
                             <div class="formulario__opciones">
-                                <label class="formulario__opcion"><input type="radio" name="tipo" value="rancho" checked><span>Rancho</span></label>
-                                <label class="formulario__opcion"><input type="radio" name="tipo" value="evento"><span>Evento</span></label>
+                                                                <label class="formulario__opcion"><input type="radio" name="tipo" value="evento" checked><span>Evento</span></label>
                                 <label class="formulario__opcion"><input type="radio" name="tipo" value="tenis"><span>Cancha de tenis</span></label>
                             </div>
                         </fieldset>
@@ -225,7 +223,7 @@
                                 <label class="formulario__etiqueta" for="fecha">Fecha</label>
                                 <input class="formulario__control" id="fecha" name="fecha" type="date" required>
                             </div>
-                            <div class="formulario__campo" data-solo="rancho evento">
+                            <div class="formulario__campo" data-solo="evento">
                                 <label class="formulario__etiqueta" for="personas">Cantidad de personas</label>
                                 <input class="formulario__control" id="personas" name="personas" type="number" min="1" max="500" value="10">
                             </div>
@@ -333,69 +331,6 @@
 
     <a class="whatsapp-flotante" data-whatsapp href="#" aria-label="Escribir por WhatsApp">💬</a>
 
-    <!-- Compra de entradas -->
-    <dialog id="modal-entradas" class="modal" aria-labelledby="titulo-entradas">
-        <div class="modal__cabecera">
-            <h2 id="titulo-entradas" class="modal__titulo">Comprar entradas</h2>
-            <button class="modal__cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
-        </div>
-        <div class="modal__cuerpo">
-            <!-- Paso 1: datos de la compra -->
-            <form id="form-entradas" class="formulario">
-                <div class="formulario__campo">
-                    <label class="formulario__etiqueta" for="pase">Pase</label>
-                    <select class="formulario__control" id="pase" name="pase"></select>
-                </div>
-                <div class="formulario__fila formulario__fila--doble">
-                    <div class="formulario__campo">
-                        <label class="formulario__etiqueta" for="cantidad">Cantidad de personas</label>
-                        <input class="formulario__control" id="cantidad" name="cantidad" type="number" min="1" max="50" value="1" required>
-                    </div>
-                    <div class="formulario__campo">
-                        <label class="formulario__etiqueta" for="fecha-visita">Fecha de la visita</label>
-                        <input class="formulario__control" id="fecha-visita" name="fecha" type="date" required>
-                    </div>
-                </div>
-                <div class="formulario__fila formulario__fila--doble">
-                    <div class="formulario__campo">
-                        <label class="formulario__etiqueta" for="nombre-entradas">Nombre</label>
-                        <input class="formulario__control" id="nombre-entradas" name="nombre" type="text" required autocomplete="name">
-                    </div>
-                    <div class="formulario__campo">
-                        <label class="formulario__etiqueta" for="telefono-entradas">WhatsApp</label>
-                        <input class="formulario__control" id="telefono-entradas" name="telefono" type="tel" required autocomplete="tel">
-                    </div>
-                </div>
-                <div class="formulario__campo" data-solo-api>
-                    <label class="formulario__etiqueta" for="correo-entradas">Correo (opcional, para recibir los boletos)</label>
-                    <input class="formulario__control" id="correo-entradas" name="correo" type="email" autocomplete="email">
-                </div>
-                <div class="formulario__total"><span>Total</span><span id="entradas-total">₡0</span></div>
-                <button class="boton boton--naranja boton--completo" type="submit">Continuar</button>
-                <p id="entradas-mensaje" class="formulario__mensaje" hidden role="status"></p>
-            </form>
-
-            <!-- Paso 2: pagar por SINPE y confirmar -->
-            <form id="form-pago" class="formulario" hidden>
-                <p class="formulario__mensaje">Su orden es <strong id="pago-codigo"></strong>. Haga un SINPE Móvil de <strong id="pago-monto"></strong> al <strong id="pago-sinpe"></strong> y escriba <strong>solo el código de la orden</strong> en el detalle (descripción) del SINPE.</p>
-                <p class="formulario__nota">Deje esta página abierta: apenas llegue su pago, sus boletos aparecen aquí solos.</p>
-                <p id="pago-vence" class="formulario__nota"></p>
-                <div class="formulario__campo">
-                    <label class="formulario__etiqueta" for="ultimos4">¿Olvidó escribir el código? Ponga aquí los últimos 4 dígitos del número de comprobante</label>
-                    <input class="formulario__control" id="ultimos4" name="ultimos4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
-                </div>
-                <button class="boton boton--naranja boton--completo" type="submit">Ya pagué: confirmar y recibir mis boletos</button>
-                <p id="pago-mensaje" class="formulario__mensaje" hidden role="status"></p>
-            </form>
-
-            <!-- Paso 3: boletos -->
-            <div id="boletos" hidden>
-                <p class="formulario__mensaje">Pago confirmado. Presente cada código QR en la entrada. Guarde una captura o descargue las imágenes.</p>
-                <p id="boletos-correo" class="formulario__nota" hidden>También los enviamos a su correo.</p>
-                <div id="boletos-lista" class="boletos"></div>
-            </div>
-        </div>
-    </dialog>
 
     <!-- Visor de galería -->
     <dialog id="visor" class="modal modal--imagen" aria-label="Foto ampliada">

@@ -1,26 +1,44 @@
 @use '../base/variables' as v;
 @use '../base/mixins' as m;
 
-.pases {
-    @include m.grid(28rem, 2.4rem);
-    margin-bottom: 3.6rem;
+// Sección «Compre su tiquete en línea» de la página principal: boleto de cine y mapa de ranchos
+.tiquete-cine {
+    --corte: 15rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--corte);
+    max-width: 76rem;
+    margin: 0 auto 2.4rem;
+    border-radius: 2rem;
+    background: v.$noche;
+    color: v.$blanco;
+    filter: drop-shadow(0 1rem 1.8rem rgba(v.$noche, .18));
+    -webkit-mask: radial-gradient(circle 1.4rem at calc(100% - var(--corte)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+                  radial-gradient(circle 1.4rem at calc(100% - var(--corte)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+    mask: radial-gradient(circle 1.4rem at calc(100% - var(--corte)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+          radial-gradient(circle 1.4rem at calc(100% - var(--corte)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+    @media (max-width: 480px) { --corte: 11rem; }
+
+    &__cuerpo { display: flex; flex-direction: column; align-items: flex-start; gap: .8rem; padding: 2.6rem; min-width: 0; }
+    &__etiqueta { font-size: 1.1rem; font-weight: 900; letter-spacing: .24em; color: v.$naranja; }
+    &__nombre { margin: 0; font-size: clamp(2.4rem, 5vw, 3rem); font-weight: 900; line-height: 1.1; color: v.$blanco; }
+    &__texto { margin: 0 0 .6rem; color: #cfe3ec; line-height: 1.45; }
+    &__talon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; padding: 1.2rem; border-left: .3rem dashed v.$celeste; text-align: center; }
+    &__precio { font-size: clamp(2.4rem, 6vw, 3.2rem); font-weight: 900; color: v.$naranja; }
+    &__unidad { font-size: 1.2rem; font-weight: 700; color: #cfe3ec; }
 }
 
-.pase {
-    display: flex;
-    flex-direction: column;
-    border-radius: v.$radio;
-    background: v.$blanco;
-    box-shadow: v.$sombra;
-    overflow: hidden;
-
-    &__nombre { margin: 0; padding: 1.8rem 2.2rem; background: v.$turquesa-oscuro; color: v.$blanco; font-size: 2.2rem; font-weight: 800; }
-    &--destacado &__nombre { background: v.$naranja; color: v.$noche; }
-    &__incluye { @include m.reset-lista; flex: 1; display: grid; gap: 1rem; padding: 2.2rem; }
-    &__incluye li::before { content: '✔ '; color: v.$verde; font-weight: 800; }
-    &__precio { margin: 0; padding: 1.6rem 2.2rem; background: v.$crema; font-size: 2.6rem; font-weight: 800; color: v.$turquesa-oscuro; }
-    &__precio small { font-size: 1.3rem; font-weight: 600; color: v.$gris; }
+.tiquetes__chips {
+    @include m.reset-lista;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 3.2rem;
+    li { padding: 1rem 1.8rem; border-radius: 2.2rem; background: v.$blanco; font-weight: 800; font-size: 1.5rem; box-shadow: v.$sombra; }
 }
+.tiquetes__chip--oscuro { background: v.$noche !important; color: v.$blanco; }
 
-.tiquetes__acciones { text-align: center; }
-.tiquetes__nota { margin-top: 1.4rem; font-size: 1.4rem; color: v.$gris; }
+.tiquetes__ranchos {
+    display: flex; flex-wrap: wrap; gap: 2.8rem; align-items: center;
+    padding: 2.8rem; border-radius: 2.4rem; background: v.$blanco; box-shadow: v.$sombra;
+    h3 { margin: .4rem 0 1rem; font-size: 2.8rem; font-weight: 900; line-height: 1.15; }
+    p { margin: 0 0 1.6rem; color: v.$gris; line-height: 1.5; }
+}
+.tiquetes__ranchos-texto { flex: 1 1 30rem; min-width: 0; }
+.tiquetes__mapa { flex: 1 1 52rem; min-width: 0; overflow-x: auto; border-radius: 1.6rem; }

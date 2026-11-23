@@ -4,6 +4,8 @@ import { hoyCR } from './_lib/fechas.mjs'
 import { boletosConQr } from './_lib/boletos.mjs'
 import { completarPago } from './_lib/pagos.mjs'
 import { reintentarPendientes } from './_lib/loyverse.mjs'
+import { ranchosDelDia, ocuparEnPuerta, liberarDePuerta } from './_lib/ranchos.mjs'
+import { RANCHOS } from '../../src/js/precios-tiquetes.js'
 
 const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
 
@@ -13,6 +15,8 @@ const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
 //   aprobar   (admin):  aprueba un pago a mano con el número de comprobante
 //   boletos   (admin):  vuelve a mostrar los boletos de una compra pagada
 //   reintentar-loyverse (admin): envía a Loyverse las ventas pendientes
+//   ranchos (puerta): estado de los 7 ranchos hoy
+//   rancho-ocupar / rancho-liberar (puerta): llegó alguien sin reserva / se fue
 export default async (req, context) => {
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
     const d = await leerJson(req, 2048)
@@ -36,13 +40,23 @@ export default async (req, context) => {
         const resultados = []
         for (const o of lista) {
             resultados.push({
-                codigo: o.codigo, estado: o.estado, nombre: o.nombre, nombrePase: o.nombrePase,
+                codigo: o.codigo, estado: o.estado, nombre: o.nombre, nombrePase: o.nombrePase, resumen: o.general != null ? o.nombrePase : `${o.cantidad} × ${o.nombrePase}`,
+                ranchoConflicto: o.ranchoConflicto || null,
                 cantidad: o.cantidad, total: o.total, fechaVisita: o.fechaVisita, esHoy: o.fechaVisita === hoy,
                 vencida: o.estado === 'pendiente' && new Date(o.venceEn) < new Date(),
                 ingresados: await boletos.countDocuments({ ordenCodigo: o.codigo, estado: 'usado' })
             })
         }
         return json({ resultados })
+    }
+
+    if (d.accion === 'ranchos') return json({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy) })
+    if (d.accion === 'rancho-ocupar' || d.accion === 'rancho-liberar') {
+        const n = Number(d.rancho)
+        if (!RANCHOS.includes(n)) return json({ error: 'Rancho no válido' }, 400)
+        const ok = d.accion === 'rancho-ocupar' ? await ocuparEnPuerta(db, hoy, n) : await liberarDePuerta(db, hoy, n)
+        if (!ok) return json({ error: d.accion === 'rancho-ocupar' ? `El rancho ${n} ya está reservado o apartado` : `El rancho ${n} no estaba ocupado en la puerta` }, 409)
+        return json({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy) })
     }
 
     if (!/^[A-Z0-9]{6}$/.test(codigo) && d.accion !== 'reintentar-loyverse') return json({ error: 'Código de compra no válido' }, 400)

@@ -1,16 +1,15 @@
 // Fuente de verdad de precios y reglas. El servidor calcula siempre el monto:
 // nunca se confía en el precio que manda el navegador.
-// Mantener sincronizado con src/js/datos.js (que solo muestra precios en pantalla).
 
-export const PASES = {
-    dia: { nombre: 'Pase del día', precio: 6000 },
-    cervecero: { nombre: 'Pase Cervecero', precio: 6000 },
-    economico: { nombre: 'Pase Económico', precio: 3000 }
+// Los precios de entradas y ranchos viven en src/js/precios-tiquetes.js (un solo archivo para sitio y servidor).
+export { DIAS_CERRADO, MAX_PERSONAS, MAX_DIAS_ADELANTE, PRECIO_ENTRADA, PRECIO_RANCHO_FINDE } from '../../../src/js/precios-tiquetes.js'
+import { PRECIO_ENTRADA, PRECIO_RANCHO_FINDE } from '../../../src/js/precios-tiquetes.js'
+
+// Artículos que se registran en Loyverse (variable LOYVERSE_VARIANT_<ID> con el variant_id de cada uno)
+export const PRODUCTOS_LOYVERSE = {
+    general: { nombre: 'Entrada general', precio: PRECIO_ENTRADA },
+    rancho: { nombre: 'Rancho (fin de semana)', precio: PRECIO_RANCHO_FINDE }
 }
-
-export const DIAS_CERRADO = [3]              // 0 = domingo ... 3 = miércoles
-export const MAX_PERSONAS = 50
-export const MAX_DIAS_ADELANTE = 90
 export const ORDEN_VENCE_MIN = Number(process.env.ORDEN_VENCE_MIN || 120)
 export const MAX_INTENTOS = 5                // intentos de verificar un pago por orden
 export const TOLERANCIA_PAGO_MIN = 10        // el aviso del banco puede llegar antes de crear la orden

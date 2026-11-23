@@ -29,7 +29,7 @@ export default async req => {
     if (orden.estado === 'pagada') {
         if (!ultimos4) return json({ error: 'Su orden ya está pagada. Para ver sus boletos de nuevo escriba los últimos 4 dígitos del comprobante.', pagada: true }, 403)
         if (orden.ultimos4Usado !== ultimos4) return json({ error: 'Los dígitos no coinciden con el pago de esta orden' }, 403)
-        return json({ codigo, boletos: await boletosConQr(orden), correoEnviado: false })
+        return json({ codigo, boletos: await boletosConQr(orden), correoEnviado: false, ranchos: orden.ranchos || [] })
     }
 
     if (new Date(orden.venceEn) < new Date())
@@ -73,7 +73,7 @@ export default async req => {
         await pagos.updateOne({ comprobante: pago.comprobante }, { $set: { estado: 'libre' }, $unset: { ordenCodigo: '' } })
         return json({ error: 'La orden cambió de estado. Intente de nuevo.' }, 409)
     }
-    return json({ codigo, boletos: cierre.boletos, correoEnviado: cierre.correoEnviado })
+    return json({ codigo, boletos: cierre.boletos, correoEnviado: cierre.correoEnviado, ranchos: cierre.orden.ranchos || [], ranchoConflicto: cierre.ranchoConflicto })
 }
 
 export const config = { path: '/api/verificar-pago' }

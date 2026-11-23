@@ -32,7 +32,7 @@ function aplicar(doc, upd) {
     for (const [k, v] of Object.entries(upd.$pull || {})) { if (Array.isArray(doc[k])) doc[k] = doc[k].filter(x => x !== v) }
 }
 
-const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id', cotizaciones: 'codigo' }
+const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id', cotizaciones: 'codigo', ranchos_reservas: '_id' }
 
 export function crearDbFalsa() {
     const datos = {}
@@ -74,6 +74,16 @@ export function crearDbFalsa() {
                 const lista = filas.filter(x => coincide(x, f))
                 lista.forEach(d => aplicar(d, upd))
                 return { modifiedCount: lista.length }
+            },
+            async deleteOne(f) {
+                const i = filas.findIndex(x => coincide(x, f))
+                if (i >= 0) filas.splice(i, 1)
+                return { deletedCount: i >= 0 ? 1 : 0 }
+            },
+            async deleteMany(f) {
+                let n = 0
+                for (let i = filas.length - 1; i >= 0; i--) if (coincide(filas[i], f)) { filas.splice(i, 1); n++ }
+                return { deletedCount: n }
             },
             async createIndex() {}
         }

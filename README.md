@@ -14,8 +14,9 @@ El código de las funciones, el lector y las pruebas no se publican.
 ## Dónde editar
 
 - `src/img/logo.png`: logo con fondo transparente (de aquí salen el menú, la portada y el favicon).
-- `src/js/datos.js`: precios de los pases, eventos, número de WhatsApp y SINPE, y el interruptor `ventaEnLinea`.
-- `netlify/functions/_lib/config.mjs`: precios y reglas que usa el servidor (deben coincidir con `datos.js`).
+- `src/js/precios-tiquetes.js`: precio de la entrada (₡3 500), menores gratis, horario, miércoles cerrado, ranchos (7, máx. 8 personas, ₡10 000 sábado y domingo) y minutos de apartado. Lo usan la página y el servidor: no hay que tocarlo en dos lugares.
+- `src/js/datos.js`: eventos, número de WhatsApp y SINPE, y el interruptor `ventaEnLinea`.
+- `src/js/mapa-balneario.js`: mapa ilustrado con los ranchos (sale del lienzo de diseño «Boletos y ranchos»).
 - `src/scss/`: estilos por bloque BEM (`components/` y `layout/`).
 - `public/index.html`: textos y secciones. `public/panel.html`: panel del personal.
 
@@ -63,11 +64,11 @@ No hay que crear tablas: las colecciones y los índices se crean solos la primer
 
 ## Conexión con Loyverse
 
-1. En el Back Office de Loyverse cree tres artículos con el mismo precio que el sitio (Pase del día, Pase Cervecero, Pase Económico) y un tipo de pago «SINPE web».
+1. En el Back Office de Loyverse cree dos artículos con el mismo precio que el sitio («Entrada general» ₡3 500 y «Rancho (fin de semana)» ₡10 000; los menores y los ranchos entre semana van en ₡0 y no se envían) y un tipo de pago «SINPE web».
 2. Back Office > Tokens de acceso > Agregar token de acceso. Copie el token (da acceso a toda la cuenta: trátelo como una contraseña).
 3. Copie `.env.example` como `.env`, pegue el token en `LOYVERSE_TOKEN` y ejecute `node --env-file=.env scripts/loyverse-ids.mjs`. Copie los identificadores a `.env`.
 4. Compruebe con `node --env-file=.env scripts/loyverse-prueba.mjs`. Con `--recibo` crea un recibo real de prueba (hay que reembolsarlo en Loyverse).
-5. Cargue las seis variables `LOYVERSE_*` en Netlify y vuelva a publicar.
+5. Cargue las cinco variables `LOYVERSE_*` (token, tienda, tipo de pago, `LOYVERSE_VARIANT_GENERAL` y `LOYVERSE_VARIANT_RANCHO`) en Netlify y vuelva a publicar.
 6. En `/panel` el semáforo de Loyverse debe quedar en verde.
 
 ## Correo y variables de entorno
@@ -103,10 +104,11 @@ permiten contraseñas de aplicación y se necesita OAuth.
 
 | Endpoint | Quién | Qué hace |
 |---|---|---|
-| `POST /api/ordenes` | Cliente | Crea la orden pendiente. El monto lo calcula el servidor. |
+| `POST /api/ordenes` | Cliente | Crea la orden pendiente `{ general, menores, ranchos, fechaVisita, … }`. El monto lo calcula el servidor y aparta los ranchos 15 minutos (409 si otro cliente lo tomó). |
+| `GET /api/ranchos?desde=&dias=` | Cliente | Ranchos ocupados por día (pagados, del personal o con apartado vigente) y su precio. Sin datos de clientes. |
 | `POST /api/verificar-pago` | Cliente | Busca en `pagos_sinpe` un pago libre con el mismo monto y el código de la orden en la descripción del SINPE (respaldo: los últimos 4 dígitos del comprobante), lo consume, crea los boletos y registra el recibo en Loyverse. |
 | `POST /api/validar-boleto` | Personal | Marca un boleto como usado. Con `grupo: true` da ingreso a los acompañantes de la misma compra. |
-| `POST /api/panel` | Personal | `buscar`, `ingresar` (PIN de puerta); `aprobar`, `boletos`, `reintentar-loyverse` (PIN de administración). |
+| `POST /api/panel` | Personal | `buscar`, `ingresar`, `ranchos`, `rancho-ocupar`, `rancho-liberar` (PIN de puerta); `aprobar`, `boletos`, `reintentar-loyverse` (PIN de administración). |
 | `POST /api/estado` | Personal | Semáforo de conexiones: base de datos, lector, módem, correo, Loyverse y recibos pendientes. |
 | `POST /api/cotizaciones` | Cliente | Crea una solicitud de cotización de grupo (COT-2026-001). Recalcula el monto y aparta la fecha 2 días. |
 | `GET /api/cotizaciones?codigo=&tel=` | Cliente | Seguimiento de la solicitud con el código y los últimos 4 números del teléfono. |
@@ -114,6 +116,13 @@ permiten contraseñas de aplicación y se necesita OAuth.
 | `POST /api/eventos-admin` | Administración | `listar`, `estado` (Solicitada → Cotizada → Reservada → Confirmada → Realizada, o Cancelada), `tarea`, `calendario`. Solo PIN de administración. |
 | `GET /api/calendario.ics?k=` | Administración | Calendario privado para suscribirse desde Google Calendar: eventos y tareas del personal. |
 | `tareas-programadas` | Automática | Cada 30 minutos reenvía a Loyverse lo pendiente, vence solicitudes y cotizaciones, manda el resumen diario de eventos y avisa si algo está en rojo. |
+
+## Compra de tiquetes y ranchos (compra v2, diciembre 2026)
+
+- **Página** `tiquetes.html`: fecha → tiquetes (entrada general y menores de 4) → rancho en el mapa (opcional) → carrito y datos → SINPE en tres toques (copiar número, monto exacto y código) → boletos con QR, uno por persona.
+- **Ranchos**: colección `ranchos_reservas`, un documento por fecha y rancho (`_id` «2026-12-05#3»), así que dos clientes nunca reciben el mismo. El apartado dura 15 minutos; al pagar queda firme. Si un pago llega después de vencido y otro cliente ya lo tomó, la venta se completa y el panel muestra el aviso «rancho en conflicto» para resolverlo con el cliente.
+- **En la puerta**: `/panel` → «Ranchos hoy» muestra cada rancho (libre, apartado, reservado o del personal) y permite marcar uno como ocupado cuando llega alguien sin reserva.
+- **Probar**: `node scripts/servidor-local.mjs`, abrir http://localhost:8888/tiquetes.html?prueba=ventas y simular la llegada del SINPE con `curl -X POST "http://localhost:8888/__simular-pago?codigo=CODIGO"`.
 
 ## Cotizador de grupos y eventos (etapa 3, CAM-008)
 

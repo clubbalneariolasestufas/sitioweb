@@ -1,6 +1,6 @@
 // Loyverse es el punto central de venta: cada compra en línea queda como un recibo en el POS,
 // con su tipo de pago propio, para que el cierre de caja y los reportes salgan de un solo lugar.
-import { PASES } from './config.mjs'
+import { PRODUCTOS_LOYVERSE } from './config.mjs'
 
 const BASE = 'https://api.loyverse.com/v1.0'
 const env = () => ({
@@ -33,8 +33,19 @@ export async function sincronizarOrden(db, codigo) {
     )
     if (!orden) return { omitido: true }
     try {
-        const variante = varianteDe(orden.paseId)
-        if (!variante) throw new Error(`Falta la variable LOYVERSE_VARIANT_${orden.paseId.toUpperCase()}`)
+        // Una línea por artículo con precio (los menores y los ranchos de entre semana no se cobran)
+        const lineas = orden.lineas
+            ? Object.values(orden.lineas.filter(l => l.precio > 0).reduce((acc, l) => {
+                acc[l.id] ??= { id: l.id, cantidad: 0, precio: l.precio }
+                acc[l.id].cantidad += l.cantidad
+                return acc
+            }, {}))
+            : [{ id: orden.paseId, cantidad: orden.cantidad, precio: orden.total / orden.cantidad }]
+        const line_items = lineas.map(l => {
+            const variante = varianteDe(l.id)
+            if (!variante) throw new Error(`Falta la variable LOYVERSE_VARIANT_${String(l.id).toUpperCase()}`)
+            return { variant_id: variante, quantity: l.cantidad, price: l.precio }
+        })
         const pagadaEn = new Date(orden.pagadaEn || Date.now()).toISOString()
         const recibo = await api('/receipts', {
             method: 'POST',
@@ -42,8 +53,8 @@ export async function sincronizarOrden(db, codigo) {
                 store_id: env().tienda,
                 source: 'Sitio web',
                 receipt_date: pagadaEn,
-                note: `Orden web ${orden.codigo} · Comprobante SINPE ${orden.comprobante} · Visita ${orden.fechaVisita} · ${orden.nombre}`.slice(0, 250),
-                line_items: [{ variant_id: variante, quantity: orden.cantidad, price: orden.total / orden.cantidad }],
+                note: `Orden web ${orden.codigo} · Comprobante SINPE ${orden.comprobante} · Visita ${orden.fechaVisita} · ${orden.nombre} · ${orden.nombrePase}`.slice(0, 250),
+                line_items,
                 payments: [{ payment_type_id: env().tipoPago, paid_at: pagadaEn }]
             })
         })
@@ -72,7 +83,7 @@ export async function probarLoyverse() {
     try {
         const { items = [] } = await api('/items?limit=250')
         const variantes = new Map(items.flatMap(i => (i.variants || []).map(v => [v.variant_id, v])))
-        for (const [id, pase] of Object.entries(PASES)) {
+        for (const [id, pase] of Object.entries(PRODUCTOS_LOYVERSE)) {
             const v = variantes.get(varianteDe(id))
             if (!v) { avisos.push(`"${pase.nombre}" no está enlazado a un artículo de Loyverse`); continue }
             const precio = v.stores?.find(s => s.store_id === env().tienda)?.price ?? v.default_price

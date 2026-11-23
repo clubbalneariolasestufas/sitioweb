@@ -40,6 +40,8 @@ async function asegurarIndices(db) {
         db.collection('cotizaciones').createIndex({ codigo: 1 }, { unique: true }),
         db.collection('cotizaciones').createIndex({ fechaEvento: 1, estado: 1 }),
         db.collection('cotizaciones').createIndex({ estado: 1, creadaEn: 1 }),
-        db.collection('cotizaciones').createIndex({ huella: 1, creadaEn: 1 })
+        db.collection('cotizaciones').createIndex({ huella: 1, creadaEn: 1 }),
+        db.collection('ranchos_reservas').createIndex({ fecha: 1 }),
+        db.collection('ranchos_reservas').createIndex({ orden: 1 })
     ])
 }

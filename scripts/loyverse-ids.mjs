@@ -20,7 +20,7 @@ try {
     console.log('\nTIPOS DE PAGO  ->  LOYVERSE_PAYMENT_TYPE_ID  (cree uno llamado "SINPE web")')
     for (const p of (await api('/payment_types')).payment_types || []) console.log(`  ${p.id}   ${p.name} (${p.type})`)
 
-    console.log('\nARTÍCULOS  ->  LOYVERSE_VARIANT_DIA, LOYVERSE_VARIANT_CERVECERO, LOYVERSE_VARIANT_ECONOMICO')
+    console.log('\nARTÍCULOS  ->  LOYVERSE_VARIANT_GENERAL (Entrada general), LOYVERSE_VARIANT_RANCHO (Rancho fin de semana)')
     for (const i of (await api('/items?limit=250')).items || [])
         for (const v of i.variants || []) console.log(`  ${v.variant_id}   ${i.item_name}${v.option1_value ? ' / ' + v.option1_value : ''}   precio: ${v.default_price ?? 'variable'}`)
 } catch (e) {

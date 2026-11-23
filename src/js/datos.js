@@ -1,4 +1,4 @@
-// Datos editables del sitio. Cambie aquí precios, eventos y contacto sin tocar el resto del código.
+// Datos editables del sitio: eventos y contacto. Los precios de entradas y ranchos están en precios-tiquetes.js.
 
 export const CONFIG = {
     nombre: 'Club Balneario Las Estufas',
@@ -13,11 +13,6 @@ export const CONFIG = {
     api: { ordenes: '/api/ordenes', verificar: '/api/verificar-pago' }
 }
 
-export const PASES = [
-    { id: 'dia', nombre: 'Pase del día', precio: 6000 },
-    { id: 'cervecero', nombre: 'Pase Cervecero', precio: 6000 },
-    { id: 'economico', nombre: 'Pase Económico', precio: 3000 }
-]
 
 // fecha en formato AAAA-MM-DD; los eventos pasados se ocultan solos.
 export const EVENTOS = [

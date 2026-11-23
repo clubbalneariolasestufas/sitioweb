@@ -23,14 +23,16 @@ beforeEach(() => { db = crearDbFalsa(); setDbParaPruebas(db) })
 const post = (handler, cuerpo, ip = '1.1.1.1') =>
     handler(new Request('http://x/api', { method: 'POST', body: JSON.stringify(cuerpo) }), { ip })
 
-// Próxima fecha de visita que no sea miércoles
-function fechaVisita(offset = 1) {
-    for (let i = offset; i < offset + 10; i++) {
+// Próxima fecha de visita que cumpla una condición (por defecto: entre semana y no miércoles)
+const entreSemana = d => d >= 1 && d <= 5 && d !== 3
+function fechaVisita(cumple = entreSemana, offset = 1) {
+    for (let i = offset; i < offset + 14; i++) {
         const f = new Date(Date.now() + i * 86400000).toISOString().slice(0, 10)
-        if (diaSemana(f) !== 3) return f
+        if (cumple(diaSemana(f))) return f
     }
 }
-const base = () => ({ pase: 'dia', cantidad: 2, nombre: 'Ana Mora', telefono: '8850-9393', fechaVisita: fechaVisita() })
+const finDeSemana = () => fechaVisita(d => d === 0 || d === 6)
+const base = () => ({ general: 2, menores: 0, ranchos: [], nombre: 'Ana Mora', telefono: '8850-9393', fechaVisita: fechaVisita() })
 
 async function ordenPagada({ ultimos4 = '4821', comprobante = 'C-1', cuerpo = base() } = {}) {
     const r = await post(crear, cuerpo)
@@ -44,7 +46,7 @@ test('crea la orden y calcula el monto en el servidor', async () => {
     const r = await post(crear, { ...base(), total: 1, precio: 1 })
     assert.equal(r.status, 201)
     const o = await r.json()
-    assert.equal(o.total, 12000)
+    assert.equal(o.total, 7000)
     assert.match(o.codigo, /^[A-Z2-9]{6}$/)
     const guardada = db.collection('ordenes').filas[0]
     assert.equal(guardada.telefono, '88509393')
@@ -54,7 +56,7 @@ test('crea la orden y calcula el monto en el servidor', async () => {
 test('rechaza datos inválidos', async () => {
     const miercoles = (() => { for (let i = 1; i < 10; i++) { const f = new Date(Date.now() + i * 86400000).toISOString().slice(0, 10); if (diaSemana(f) === 3) return f } })()
     const casos = [
-        { pase: 'vip' }, { cantidad: 0 }, { cantidad: 51 }, { cantidad: 1.5 },
+        { general: 0 }, { general: 51 }, { general: 1.5 }, { menores: -1 }, { ranchos: [8] }, { ranchos: [1, 1] }, { general: 9, ranchos: [1] },
         { fechaVisita: '2020-01-01' }, { fechaVisita: '2026-13-40' }, { fechaVisita: miercoles },
         { fechaVisita: '2099-01-01' }, { nombre: 'A' }, { telefono: '123' }, { correo: 'malo' }, { web: 'bot' }
     ]
@@ -159,7 +161,7 @@ const ponerHoy = () => {
 }
 
 test('puerta: un escaneo puede dar ingreso a los acompañantes del grupo', async () => {
-    const { datos } = await ordenPagada({ cuerpo: { ...base(), cantidad: 4 } })
+    const { datos } = await ordenPagada({ cuerpo: { ...base(), general: 4 } })
     ponerHoy()
     const uno = await (await post(validar, { pin: '482913', token: datos.boletos[0].token })).json()
     assert.equal(uno.resultado, 'ok')
@@ -211,7 +213,7 @@ test('panel: aprobar a mano exige PIN de administración y no repite comprobante
 })
 
 test('Loyverse: registra el recibo, reintenta si falla y no duplica', async () => {
-    Object.assign(process.env, { LOYVERSE_TOKEN: 't', LOYVERSE_STORE_ID: 'tienda-1', LOYVERSE_PAYMENT_TYPE_ID: 'pago-1', LOYVERSE_VARIANT_DIA: 'var-dia' })
+    Object.assign(process.env, { LOYVERSE_TOKEN: 't', LOYVERSE_STORE_ID: 'tienda-1', LOYVERSE_PAYMENT_TYPE_ID: 'pago-1', LOYVERSE_VARIANT_GENERAL: 'var-general' })
     const original = globalThis.fetch
     const llamadas = []
     let fallar = true
@@ -236,7 +238,7 @@ test('Loyverse: registra el recibo, reintenta si falla y no duplica', async () =
         assert.equal(orden.loyverseRecibo, '2-1001')
         const cuerpo = llamadas.at(-1).cuerpo
         assert.equal(cuerpo.store_id, 'tienda-1')
-        assert.deepEqual(cuerpo.line_items, [{ variant_id: 'var-dia', quantity: 2, price: 6000 }])
+        assert.deepEqual(cuerpo.line_items, [{ variant_id: 'var-general', quantity: 2, price: 3500 }])
         assert.equal(cuerpo.payments[0].payment_type_id, 'pago-1')
 
         const antes = llamadas.length
@@ -244,7 +246,7 @@ test('Loyverse: registra el recibo, reintenta si falla y no duplica', async () =
         assert.equal(llamadas.length, antes, 'no vuelve a enviar un recibo ya registrado')
     } finally {
         globalThis.fetch = original
-        for (const k of ['LOYVERSE_TOKEN', 'LOYVERSE_STORE_ID', 'LOYVERSE_PAYMENT_TYPE_ID', 'LOYVERSE_VARIANT_DIA']) delete process.env[k]
+        for (const k of ['LOYVERSE_TOKEN', 'LOYVERSE_STORE_ID', 'LOYVERSE_PAYMENT_TYPE_ID', 'LOYVERSE_VARIANT_GENERAL']) delete process.env[k]
     }
 })
 
@@ -307,4 +309,83 @@ test('pago por código en la descripción: sin dígitos, una sola vez y con el m
     assert.equal((await post(verificarPago, { codigo: o.codigo })).status, 403)
     assert.equal((await post(verificarPago, { codigo: o.codigo, ultimos4: '0000' })).status, 403)
     assert.equal((await post(verificarPago, { codigo: o.codigo, ultimos4: '0777' })).status, 200)
+})
+
+// ---------- Compra v2: entrada única, menores gratis y ranchos ----------
+const { calcularCompra, precioRancho } = await import('../src/js/precios-tiquetes.js')
+const ranchosApi = (await import('../netlify/functions/ranchos.mjs')).default
+
+test('precios: ₡3 500 por persona, menores gratis y rancho solo cobra fin de semana', () => {
+    const semana = fechaVisita(), finde = finDeSemana()
+    assert.equal(precioRancho(semana), 0)
+    assert.equal(precioRancho(finde), 10000)
+    const c = calcularCompra({ general: 3, menores: 2, ranchos: [2], fecha: finde })
+    assert.equal(c.total, 3 * 3500 + 10000)
+    assert.equal(c.personas, 5)
+    assert.ok(c.caben)
+    assert.equal(calcularCompra({ general: 9, menores: 1, ranchos: [1], fecha: finde }).caben, false, '10 personas no caben en 1 rancho')
+    assert.equal(calcularCompra({ general: 9, menores: 1, ranchos: [1, 2], fecha: finde }).caben, true)
+    assert.equal(calcularCompra({ general: 2, menores: 0, ranchos: [5], fecha: semana }).total, 7000)
+})
+
+test('rancho: la orden lo aparta y nadie más lo puede tomar', async () => {
+    const f = finDeSemana()
+    const r1 = await post(crear, { ...base(), fechaVisita: f, ranchos: [3] })
+    assert.equal(r1.status, 201)
+    const o1 = await r1.json()
+    assert.equal(o1.total, 7000 + 10000)
+    assert.ok(o1.ranchoHastaEn)
+    const r2 = await post(crear, { ...base(), fechaVisita: f, ranchos: [3] }, '2.2.2.2')
+    assert.equal(r2.status, 409)
+    assert.equal((await r2.json()).ranchoOcupado, 3)
+    assert.equal(db.collection('ordenes').filas[1].estado, 'anulada')
+    const disp = await (await ranchosApi(new Request(`http://x/api/ranchos?desde=${f}&dias=1`), {})).json()
+    assert.deepEqual(disp.dias[0].ocupados, [3])
+    assert.equal(disp.dias[0].precioRancho, 10000)
+})
+
+test('rancho: un apartado vencido sin pagar queda libre para otro', async () => {
+    const f = finDeSemana()
+    await post(crear, { ...base(), fechaVisita: f, ranchos: [4] })
+    db.collection('ranchos_reservas').filas[0].hasta = new Date(Date.now() - 1000)
+    const r2 = await post(crear, { ...base(), fechaVisita: f, ranchos: [4] }, '2.2.2.2')
+    assert.equal(r2.status, 201)
+})
+
+test('rancho: al pagar queda firme; boletos por persona incluyen menores', async () => {
+    const f = finDeSemana()
+    const { v, datos } = await ordenPagada({ cuerpo: { ...base(), fechaVisita: f, general: 2, menores: 1, ranchos: [6] } })
+    assert.equal(v.status, 200)
+    assert.equal(datos.boletos.length, 3)
+    const res = db.collection('ranchos_reservas').filas[0]
+    assert.equal(res.firme, true)
+    assert.ok(!datos.ranchoConflicto)
+    const menores = db.collection('boletos').filas.filter(b => b.paseId === 'menor')
+    assert.equal(menores.length, 1)
+})
+
+test('rancho: si el pago llega tarde y otro tomó el rancho, se vende igual y se avisa', async () => {
+    const f = finDeSemana()
+    const o = await (await post(crear, { ...base(), fechaVisita: f, ranchos: [7] })).json()
+    const reservas = db.collection('ranchos_reservas').filas
+    reservas[0].hasta = new Date(Date.now() - 1000)
+    await post(crear, { ...base(), fechaVisita: f, ranchos: [7] }, '3.3.3.3')
+    db.collection('pagos_sinpe').filas.push({ comprobante: 'T1', ultimos4: '1234', monto: o.total, fecha: new Date(), estado: 'libre' })
+    const v = await post(verificarPago, { codigo: o.codigo, ultimos4: '1234' })
+    assert.equal(v.status, 200)
+    const d = await v.json()
+    assert.ok(d.ranchoConflicto)
+    assert.ok(db.collection('ordenes').filas[0].ranchoConflicto)
+})
+
+test('panel: ranchos del día, ocupar y liberar en la puerta', async () => {
+    const hoy = hoyCR()
+    const ocupar = await post(panel, { pin: '482913', accion: 'rancho-ocupar', rancho: 2 })
+    assert.equal(ocupar.status, 200)
+    const lista = await (await post(panel, { pin: '482913', accion: 'ranchos' })).json()
+    const r2 = (lista.ranchos || lista).find(r => r.rancho === 2)
+    assert.equal(r2.estado, 'personal')
+    assert.equal(db.collection('ranchos_reservas').filas[0].fecha, hoy)
+    assert.equal((await post(panel, { pin: '482913', accion: 'rancho-liberar', rancho: 2 })).status, 200)
+    assert.equal(db.collection('ranchos_reservas').filas.length, 0)
 })

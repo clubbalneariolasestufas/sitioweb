@@ -11,10 +11,11 @@ process.env.ADMIN_PIN_HASH ||= hashPin('222222')
 process.env.CALENDARIO_TOKEN ||= 'local-' + 'k'.repeat(30)
 const { setDbParaPruebas } = await import('../netlify/functions/_lib/db.mjs')
 const { crearDbFalsa } = await import('../tests/fake-db.mjs')
-setDbParaPruebas(crearDbFalsa())
+const db = crearDbFalsa()
+setDbParaPruebas(db)
 
 const rutas = {}
-for (const f of ['cotizaciones', 'disponibilidad', 'eventos-admin', 'calendario', 'ordenes', 'panel', 'estado', 'verificar-pago', 'validar-boleto']) {
+for (const f of ['cotizaciones', 'disponibilidad', 'eventos-admin', 'calendario', 'ordenes', 'panel', 'estado', 'verificar-pago', 'validar-boleto', 'ranchos']) {
     const m = await import(`../netlify/functions/${f}.mjs`)
     rutas[m.config.path] = m.default
 }
@@ -22,6 +23,12 @@ const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 
 http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://localhost:8888')
+    // Solo local: simula que el lector recibió el SINPE de una orden (POST /__simular-pago?codigo=XXXXXX)
+    if (u.pathname === '/__simular-pago') {
+        const o = (await db.collection('ordenes').find({ codigo: u.searchParams.get('codigo') }).toArray())[0]
+        if (o) db.collection('pagos_sinpe').filas.push({ comprobante: 'SIM-' + Date.now(), ultimos4: '4821', monto: o.total, fecha: new Date(), estado: 'libre', codigoOrden: o.codigo })
+        res.writeHead(o ? 200 : 404); res.end(o ? 'ok' : 'no'); return
+    }
     const h = rutas[u.pathname]
     if (h) {
         const cuerpo = ['GET', 'HEAD'].includes(req.method) ? undefined : await new Promise(r => { let d = ''; req.on('data', c => d += c); req.on('end', () => r(d)) })

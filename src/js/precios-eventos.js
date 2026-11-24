@@ -2,44 +2,45 @@
 // Lo usan el navegador (para mostrar el total en vivo) y el servidor (que recalcula siempre:
 // nunca se confía en el monto que manda el navegador). Un solo archivo para los dos.
 //
-// ⚠ PRECIOS DE EJEMPLO. Lexie define los reales: cambie los montos aquí, ponga
-// PRECIOS_DE_EJEMPLO en false y vuelva a publicar. No hay que tocar nada más.
+// Precios reales (noviembre 2026): entrada, ranchos y cancha salen de precios-tiquetes.js.
+// Comida, DJ, música y el área techada quedan «por cotizar»: Lexie fija el monto al cotizar.
 
-export const PRECIOS_DE_EJEMPLO = true
+import { PRECIO_ENTRADA, PRECIO_GRUPO, GRUPO_DESDE, PRECIO_TENIS_MEDIA_HORA, RANCHOS, precioRancho } from './precios-tiquetes.js'
+
+export const PRECIOS_DE_EJEMPLO = false
 
 export const ENTRADAS = [
-    { id: 'adultos', nombre: 'Adultos', precio: 6000 },
-    { id: 'ninos', nombre: 'Niños de 3 a 12 años', precio: 3000 },
-    { id: 'mayores', nombre: 'Adultos mayores', precio: 3000 }
+    { id: 'adultos', nombre: 'Entrada general', precio: PRECIO_ENTRADA },
+    { id: 'ninos', nombre: 'Menores de 4 años', precio: 0 }
 ]
 
 // exclusivo: el área se reserva para un solo grupo por día (bloquea la fecha para otros)
+// porCotizar: se registra en la solicitud y la administración pone el monto
 export const AREAS = [
-    { id: 'rancho', nombre: 'Rancho / área techada', detalle: 'Exclusivo para el grupo', precio: 25000, exclusivo: true },
-    { id: 'salon', nombre: 'Salón', detalle: 'Con mesas y sillas', precio: 35000, exclusivo: true },
-    { id: 'tenis', nombre: 'Cancha de tenis', detalle: 'Por hora', precio: 8000, porHora: true }
+    { id: 'techada', nombre: 'Área techada para eventos', detalle: 'Exclusiva para el grupo', precio: 0, exclusivo: true, porCotizar: true },
+    { id: 'ranchos', nombre: 'Ranchos de bambú', detalle: 'Hasta 8 personas cada uno', precio: 0, porRancho: true },
+    { id: 'tenis', nombre: 'Cancha de tenis', detalle: '₡3 000 la hora', precio: PRECIO_TENIS_MEDIA_HORA * 2, porHora: true }
 ]
 
 export const MENUS = [
     { id: 'ninguno', nombre: 'Sin alimentación', detalle: 'Solo ingreso y áreas', precio: 0 },
-    { id: 'casado', nombre: 'Menú A: casado típico', detalle: 'Plato fuerte y fresco natural', precio: 4500 },
-    { id: 'parrilla', nombre: 'Menú B: parrillada', detalle: 'Carnes, acompañamientos y fresco', precio: 6500 },
-    { id: 'refrigerio', nombre: 'Refrigerio', detalle: 'Bocadillo y bebida', precio: 2000 }
+    { id: 'comida', nombre: 'Comida del restaurante', detalle: 'Menú y precio los define Lexie', precio: 0, porCotizar: true }
 ]
 
 export const EXTRAS = [
-    { id: 'sonido', nombre: 'Sonido', detalle: 'Parlante y micrófono', precio: 15000 },
-    { id: 'decoracion', nombre: 'Decoración básica', detalle: 'Manteles y adornos del rancho', precio: 15000 },
-    { id: 'pastel', nombre: 'Pastel', detalle: 'Para 30 personas', precio: 18000 }
+    { id: 'dj', nombre: 'DJ', detalle: 'Por cotizar', precio: 0, porCotizar: true },
+    { id: 'musica', nombre: 'Música y sonido', detalle: 'Por cotizar', precio: 0, porCotizar: true }
 ]
 
 export const TIPOS_EVENTO = ['Excursión escolar', 'Actividad de empresa', 'Cumpleaños', 'Convivio familiar', 'Baile o música', 'Otro']
 
 export const REGLAS = {
     servicio: 0.10,            // sobre alimentación
-    iva: 0.13,                 // sobre todo
+    iva: 0,                    // los precios publicados ya incluyen impuestos (Lexie ajusta el total final si hace falta)
     adelanto: 0.50,            // para reservar la fecha
     minPersonas: 10,
+    grupoDesde: GRUPO_DESDE,   // desde aquí la entrada general baja a precioGrupo
+    precioGrupo: PRECIO_GRUPO,
     maxPersonas: 300,          // más de esto, Lexie revisa
     diasApartado: 2,           // la solicitud aparta la fecha este tiempo
     diasValidez: 15,           // la cotización enviada vale este tiempo
@@ -63,43 +64,50 @@ export function normalizar(sel = {}) {
     for (const e of ENTRADAS) personas[e.id] = entero(sel.personas?.[e.id], 1000)
     const areas = [...new Set((Array.isArray(sel.areas) ? sel.areas : []).filter(id => _areas[id]))]
     const horasTenis = areas.includes('tenis') ? Math.max(1, entero(sel.horasTenis, 8)) : 0
+    const ranchos = areas.includes('ranchos') ? Math.max(1, entero(sel.ranchos, RANCHOS.length)) : 0
     const menu = _menus[sel.menu] ? sel.menu : 'ninguno'
     const extras = [...new Set((Array.isArray(sel.extras) ? sel.extras : []).filter(id => _extras[id]))]
-    return { personas, areas, horasTenis, menu, extras }
+    return { personas, areas, horasTenis, ranchos, menu, extras }
 }
 
 export const totalPersonas = p => ENTRADAS.reduce((s, e) => s + (p?.[e.id] || 0), 0)
 
 // Devuelve el desglose completo, redondeado a colones enteros.
-export function calcular(selCruda) {
+export function calcular(selCruda, fecha = null) {
     const sel = normalizar(selCruda)
     const n = totalPersonas(sel.personas)
     const lineas = []
-    let entradas = 0, areas = 0, alimentacion = 0, extras = 0
+    let entradas = 0, areas = 0, alimentacion = 0, extras = 0, porCotizar = false
+    const grupo = (sel.personas.adultos || 0) >= REGLAS.grupoDesde
 
     for (const e of ENTRADAS) {
         const c = sel.personas[e.id]
         if (!c) continue
-        const monto = c * e.precio
+        const precio = e.id === 'adultos' && grupo ? REGLAS.precioGrupo : e.precio
+        const monto = c * precio
         entradas += monto
-        lineas.push({ grupo: 'Entradas', concepto: e.nombre, cantidad: c, precio: e.precio, monto })
+        lineas.push({ grupo: 'Entradas', concepto: e.nombre + (e.id === 'adultos' && grupo ? ' (precio de grupo)' : ''), cantidad: c, precio, monto })
     }
     for (const id of sel.areas) {
         const a = _areas[id]
-        const cantidad = a.porHora ? sel.horasTenis : 1
-        const monto = cantidad * a.precio
+        if (a.porCotizar) { porCotizar = true; lineas.push({ grupo: 'Áreas', concepto: a.nombre + ' (por cotizar)', cantidad: 1, precio: 0, monto: 0, porCotizar: true }); continue }
+        const cantidad = a.porHora ? sel.horasTenis : a.porRancho ? sel.ranchos : 1
+        const precio = a.porRancho ? (fecha ? precioRancho(fecha) : 0) : a.precio
+        const monto = cantidad * precio
         areas += monto
-        lineas.push({ grupo: 'Áreas', concepto: a.nombre + (a.porHora ? ` (${cantidad} h)` : ''), cantidad, precio: a.precio, monto })
+        lineas.push({ grupo: 'Áreas', concepto: a.nombre + (a.porHora ? ` (${cantidad} h)` : ''), cantidad, precio, monto })
     }
     const m = _menus[sel.menu]
-    if (m.precio && n) {
+    if (m.porCotizar && n) { porCotizar = true; lineas.push({ grupo: 'Alimentación', concepto: m.nombre + ' (por cotizar)', cantidad: n, precio: 0, monto: 0, porCotizar: true }) }
+    else if (m.precio && n) {
         alimentacion = m.precio * n
         lineas.push({ grupo: 'Alimentación', concepto: m.nombre, cantidad: n, precio: m.precio, monto: alimentacion })
     }
     for (const id of sel.extras) {
         const x = _extras[id]
+        if (x.porCotizar) porCotizar = true
         extras += x.precio
-        lineas.push({ grupo: 'Extras', concepto: x.nombre, cantidad: 1, precio: x.precio, monto: x.precio })
+        lineas.push({ grupo: 'Extras', concepto: x.nombre + (x.porCotizar ? ' (por cotizar)' : ''), cantidad: 1, precio: x.precio, monto: x.precio, porCotizar: !!x.porCotizar })
     }
 
     const subtotal = entradas + areas + alimentacion + extras
@@ -112,6 +120,7 @@ export function calcular(selCruda) {
         entradas, areas, alimentacion, extras, subtotal, servicio, iva, total, adelanto,
         saldo: total - adelanto,
         revisionManual: n > REGLAS.maxPersonas,
+        grupo, porCotizar,
         preciosDeEjemplo: PRECIOS_DE_EJEMPLO
     }
 }

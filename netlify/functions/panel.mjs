@@ -5,7 +5,8 @@ import { boletosConQr } from './_lib/boletos.mjs'
 import { completarPago } from './_lib/pagos.mjs'
 import { reintentarPendientes } from './_lib/loyverse.mjs'
 import { ranchosDelDia, ocuparEnPuerta, liberarDePuerta } from './_lib/ranchos.mjs'
-import { RANCHOS } from '../../src/js/precios-tiquetes.js'
+import { ocuparTenisPuerta, liberarTenisPuerta, tenisDelDia } from './_lib/tenis.mjs'
+import { RANCHOS, TENIS_ABRE, TENIS_CIERRA } from '../../src/js/precios-tiquetes.js'
 
 const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
 
@@ -17,6 +18,7 @@ const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
 //   reintentar-loyverse (admin): envía a Loyverse las ventas pendientes
 //   ranchos (puerta): estado de los 7 ranchos hoy
 //   rancho-ocupar / rancho-liberar (puerta): llegó alguien sin reserva / se fue
+//   tenis-ocupar { inicio, bloques } / tenis-liberar { inicio, fin } (puerta): cancha pagada en la entrada
 export default async (req, context) => {
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
     const d = await leerJson(req, 2048)
@@ -42,6 +44,7 @@ export default async (req, context) => {
             resultados.push({
                 codigo: o.codigo, estado: o.estado, nombre: o.nombre, nombrePase: o.nombrePase, resumen: o.general != null ? o.nombrePase : `${o.cantidad} × ${o.nombrePase}`,
                 ranchoConflicto: o.ranchoConflicto || null,
+                tenisConflicto: o.tenisConflicto || null,
                 cantidad: o.cantidad, total: o.total, fechaVisita: o.fechaVisita, esHoy: o.fechaVisita === hoy,
                 vencida: o.estado === 'pendiente' && new Date(o.venceEn) < new Date(),
                 ingresados: await boletos.countDocuments({ ordenCodigo: o.codigo, estado: 'usado' })
@@ -50,13 +53,27 @@ export default async (req, context) => {
         return json({ resultados })
     }
 
-    if (d.accion === 'ranchos') return json({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy) })
+    const vistaHoy = async () => ({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy), tenis: await tenisDelDia(db, hoy) })
+    if (d.accion === 'ranchos') return json(await vistaHoy())
+    if (d.accion === 'tenis-ocupar' || d.accion === 'tenis-liberar') {
+        const inicio = Number(d.inicio), bloques = Number(d.bloques ?? 1), fin = Number(d.fin)
+        if (!Number.isInteger(inicio) || inicio % 30 || inicio < TENIS_ABRE || inicio >= TENIS_CIERRA) return json({ error: 'Hora no válida' }, 400)
+        if (d.accion === 'tenis-ocupar') {
+            if (!Number.isInteger(bloques) || bloques < 1 || inicio + bloques * 30 > TENIS_CIERRA) return json({ error: 'Duración no válida' }, 400)
+            const r = await ocuparTenisPuerta(db, hoy, inicio, bloques)
+            if (!r.ok) return json({ error: `La cancha ya está reservada a las ${r.ocupado}` }, 409)
+        } else {
+            if (!Number.isInteger(fin) || fin <= inicio) return json({ error: 'Hora no válida' }, 400)
+            if (!(await liberarTenisPuerta(db, hoy, inicio, fin))) return json({ error: 'Ese horario no estaba ocupado en la puerta' }, 409)
+        }
+        return json(await vistaHoy())
+    }
     if (d.accion === 'rancho-ocupar' || d.accion === 'rancho-liberar') {
         const n = Number(d.rancho)
         if (!RANCHOS.includes(n)) return json({ error: 'Rancho no válido' }, 400)
         const ok = d.accion === 'rancho-ocupar' ? await ocuparEnPuerta(db, hoy, n) : await liberarDePuerta(db, hoy, n)
         if (!ok) return json({ error: d.accion === 'rancho-ocupar' ? `El rancho ${n} ya está reservado o apartado` : `El rancho ${n} no estaba ocupado en la puerta` }, 409)
-        return json({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy) })
+        return json(await vistaHoy())
     }
 
     if (!/^[A-Z0-9]{6}$/.test(codigo) && d.accion !== 'reintentar-loyverse') return json({ error: 'Código de compra no válido' }, 400)

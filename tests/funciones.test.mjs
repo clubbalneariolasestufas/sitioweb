@@ -389,3 +389,63 @@ test('panel: ranchos del día, ocupar y liberar en la puerta', async () => {
     assert.equal((await post(panel, { pin: '482913', accion: 'rancho-liberar', rancho: 2 })).status, 200)
     assert.equal(db.collection('ranchos_reservas').filas.length, 0)
 })
+
+// ---------- Cancha de tenis por medias horas ----------
+test('tenis: ₡1 500 la media hora, aparta los bloques y no deja choques', async () => {
+    const f = fechaVisita()
+    const r1 = await post(crear, { ...base(), fechaVisita: f, tenis: { inicio: 540, bloques: 2 } })
+    assert.equal(r1.status, 201)
+    assert.equal((await r1.json()).total, 7000 + 3000)
+    assert.equal(db.collection('tenis_reservas').filas.length, 2)
+    // 9:30 choca con la reserva de 9:00 a 10:00
+    const r2 = await post(crear, { ...base(), fechaVisita: f, tenis: { inicio: 570, bloques: 1 } }, '2.2.2.2')
+    assert.equal(r2.status, 409)
+    assert.equal((await r2.json()).tenisOcupado, '9:30')
+    // 10:00 está libre
+    assert.equal((await post(crear, { ...base(), fechaVisita: f, tenis: { inicio: 600, bloques: 1 } }, '3.3.3.3')).status, 201)
+    const disp = await (await ranchosApi(new Request(`http://x/api/ranchos?desde=${f}&dias=1`), {})).json()
+    assert.deepEqual(disp.dias[0].tenis, [540, 570, 600])
+})
+
+test('tenis: rechaza horarios fuera de 8:00–17:00, sin media hora exacta o de más de 3 horas', async () => {
+    for (const tenis of [{ inicio: 450, bloques: 1 }, { inicio: 1000, bloques: 1 }, { inicio: 545, bloques: 1 }, { inicio: 990, bloques: 2 }, { inicio: 540, bloques: 7 }]) {
+        assert.equal((await post(crear, { ...base(), tenis })).status, 400, JSON.stringify(tenis))
+    }
+})
+
+test('tenis: si la cancha está tomada, también suelta el rancho apartado', async () => {
+    const f = finDeSemana()
+    await post(crear, { ...base(), fechaVisita: f, tenis: { inicio: 480, bloques: 2 } })
+    const r = await post(crear, { ...base(), fechaVisita: f, ranchos: [2], tenis: { inicio: 510, bloques: 1 } }, '4.4.4.4')
+    assert.equal(r.status, 409)
+    assert.ok(!db.collection('ranchos_reservas').filas.some(x => x.rancho === 2), 'el rancho 2 queda libre')
+})
+
+test('tenis: al pagar queda firme, sale en el boleto y en Loyverse como medias horas', async () => {
+    Object.assign(process.env, { LOYVERSE_TOKEN: 't', LOYVERSE_STORE_ID: 's', LOYVERSE_PAYMENT_TYPE_ID: 'p', LOYVERSE_VARIANT_GENERAL: 'vg', LOYVERSE_VARIANT_TENIS: 'vt' })
+    const original = globalThis.fetch
+    const llamadas = []
+    globalThis.fetch = async (url, o = {}) => { llamadas.push(o.body ? JSON.parse(o.body) : null); return new Response(JSON.stringify({ receipt_number: '9' }), { status: 200 }) }
+    try {
+        const { v, datos } = await ordenPagada({ cuerpo: { ...base(), tenis: { inicio: 840, bloques: 3 } } })
+        assert.equal(v.status, 200)
+        assert.ok(db.collection('tenis_reservas').filas.every(x => x.firme))
+        assert.equal(datos.boletos[0].tenis, 'Cancha de tenis 14:00 a 15:30')
+        const recibo = llamadas.find(b => b?.line_items)
+        assert.deepEqual(recibo.line_items, [{ variant_id: 'vg', quantity: 2, price: 3500 }, { variant_id: 'vt', quantity: 3, price: 1500 }])
+    } finally {
+        globalThis.fetch = original
+        for (const k of ['LOYVERSE_TOKEN', 'LOYVERSE_STORE_ID', 'LOYVERSE_PAYMENT_TYPE_ID', 'LOYVERSE_VARIANT_GENERAL', 'LOYVERSE_VARIANT_TENIS']) delete process.env[k]
+    }
+})
+
+test('panel: la cancha ocupada en la puerta no se puede comprar en la web', async () => {
+    const r = await post(panel, { pin: '482913', accion: 'tenis-ocupar', inicio: 600, bloques: 2 })
+    assert.equal(r.status, 200)
+    const vista = await r.json()
+    assert.equal(vista.tenis[0].estado, 'personal')
+    assert.equal(vista.tenis[0].fin, '11:00')
+    assert.equal((await post(panel, { pin: '482913', accion: 'tenis-ocupar', inicio: 630, bloques: 1 })).status, 409)
+    assert.equal((await post(panel, { pin: '482913', accion: 'tenis-liberar', inicio: 600, fin: 660 })).status, 200)
+    assert.equal(db.collection('tenis_reservas').filas.length, 0)
+})

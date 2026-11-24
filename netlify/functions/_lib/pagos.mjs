@@ -2,6 +2,7 @@ import { boletosConQr } from './boletos.mjs'
 import { enviarBoletos } from './correo.mjs'
 import { loyverseConfigurado, sincronizarOrden } from './loyverse.mjs'
 import { apartarRanchos } from './ranchos.mjs'
+import { apartarTenis } from './tenis.mjs'
 
 // Cierra una venta: marca la orden como pagada, consume el pago, crea los boletos,
 // envía el correo y registra el recibo en Loyverse. Devuelve null si la orden ya no estaba pendiente.
@@ -30,10 +31,18 @@ export async function completarPago(db, codigo, pago, extra = {}) {
             await ordenes.updateOne({ codigo }, { $set: { ranchoConflicto: r.ocupado } })
         }
     }
+    let tenisConflicto = null
+    if (pagada.tenis) {
+        const t = await apartarTenis(db, { fecha: pagada.fechaVisita, inicio: pagada.tenis.inicio, bloques: pagada.tenis.bloques, orden: codigo, firme: true })
+        if (!t.ok) {
+            tenisConflicto = t.ocupado
+            await ordenes.updateOne({ codigo }, { $set: { tenisConflicto: t.ocupado } })
+        }
+    }
 
     const boletos = await boletosConQr(pagada)
     // Pasos secundarios: si fallan, el cliente igual recibe sus boletos y el panel avisa del pendiente
     const correoEnviado = await enviarBoletos({ para: pagada.correo, orden: pagada, boletos })
     try { await sincronizarOrden(db, codigo) } catch (e) { console.error('Loyverse:', e.message) }
-    return { orden: pagada, boletos, correoEnviado, ranchoConflicto }
+    return { orden: pagada, boletos, correoEnviado, ranchoConflicto, tenisConflicto }
 }

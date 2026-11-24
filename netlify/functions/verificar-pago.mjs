@@ -73,7 +73,7 @@ export default async req => {
         await pagos.updateOne({ comprobante: pago.comprobante }, { $set: { estado: 'libre' }, $unset: { ordenCodigo: '' } })
         return json({ error: 'La orden cambió de estado. Intente de nuevo.' }, 409)
     }
-    return json({ codigo, boletos: cierre.boletos, correoEnviado: cierre.correoEnviado, ranchos: cierre.orden.ranchos || [], ranchoConflicto: cierre.ranchoConflicto })
+    return json({ codigo, boletos: cierre.boletos, correoEnviado: cierre.correoEnviado, ranchos: cierre.orden.ranchos || [], tenis: cierre.orden.tenis || null, ranchoConflicto: cierre.ranchoConflicto, tenisConflicto: cierre.tenisConflicto })
 }
 
 export const config = { path: '/api/verificar-pago' }

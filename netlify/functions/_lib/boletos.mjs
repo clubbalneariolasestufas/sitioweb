@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto'
 import QRCode from 'qrcode'
 import { getDb } from './db.mjs'
 import { firmar } from './tokens.mjs'
+import { hhmm } from '../../../src/js/precios-tiquetes.js'
+
+const textoTenis = t => `Cancha de tenis ${hhmm(t.inicio)} a ${hhmm(t.fin)}`
 
 const esDuplicado = e => e?.code === 11000
 
@@ -21,7 +24,7 @@ export async function asegurarBoletos(orden) {
         const token = firmar({ v: 1, b: id, o: orden.codigo, f: orden.fechaVisita })
         try {
             await col.insertOne({
-                id, ordenCodigo: orden.codigo, paseId, nombrePase, ranchos: orden.ranchos || [],
+                id, ordenCodigo: orden.codigo, paseId, nombrePase, ranchos: orden.ranchos || [], tenis: orden.tenis ? textoTenis(orden.tenis) : '',
                 fechaVisita: orden.fechaVisita, token, estado: 'valido', usadoEn: null, creadoEn: new Date()
             })
         } catch (e) { if (!esDuplicado(e)) throw e }
@@ -37,6 +40,7 @@ export async function boletosConQr(orden) {
         nombrePase: b.nombrePase,
         fechaVisita: b.fechaVisita,
         ranchos: b.ranchos || [],
+        tenis: b.tenis || '',
         token: b.token,
         qr: await QRCode.toDataURL(b.token, { errorCorrectionLevel: 'M', margin: 2, width: 360 })
     })))

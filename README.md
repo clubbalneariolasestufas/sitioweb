@@ -64,11 +64,11 @@ No hay que crear tablas: las colecciones y los índices se crean solos la primer
 
 ## Conexión con Loyverse
 
-1. En el Back Office de Loyverse cree dos artículos con el mismo precio que el sitio («Entrada general» ₡3 500 y «Rancho (fin de semana)» ₡10 000; los menores y los ranchos entre semana van en ₡0 y no se envían) y un tipo de pago «SINPE web».
+1. En el Back Office de Loyverse cree tres artículos con el mismo precio que el sitio («Entrada general» ₡3 500, «Rancho (fin de semana)» ₡10 000 y «Cancha de tenis (media hora)» ₡1 500; los menores y los ranchos entre semana van en ₡0 y no se envían) y un tipo de pago «SINPE web».
 2. Back Office > Tokens de acceso > Agregar token de acceso. Copie el token (da acceso a toda la cuenta: trátelo como una contraseña).
 3. Copie `.env.example` como `.env`, pegue el token en `LOYVERSE_TOKEN` y ejecute `node --env-file=.env scripts/loyverse-ids.mjs`. Copie los identificadores a `.env`.
 4. Compruebe con `node --env-file=.env scripts/loyverse-prueba.mjs`. Con `--recibo` crea un recibo real de prueba (hay que reembolsarlo en Loyverse).
-5. Cargue las cinco variables `LOYVERSE_*` (token, tienda, tipo de pago, `LOYVERSE_VARIANT_GENERAL` y `LOYVERSE_VARIANT_RANCHO`) en Netlify y vuelva a publicar.
+5. Cargue las seis variables `LOYVERSE_*` (token, tienda, tipo de pago, `LOYVERSE_VARIANT_GENERAL`, `LOYVERSE_VARIANT_RANCHO` y `LOYVERSE_VARIANT_TENIS`) en Netlify y vuelva a publicar.
 6. En `/panel` el semáforo de Loyverse debe quedar en verde.
 
 ## Correo y variables de entorno
@@ -116,6 +116,13 @@ permiten contraseñas de aplicación y se necesita OAuth.
 | `POST /api/eventos-admin` | Administración | `listar`, `estado` (Solicitada → Cotizada → Reservada → Confirmada → Realizada, o Cancelada), `tarea`, `calendario`. Solo PIN de administración. |
 | `GET /api/calendario.ics?k=` | Administración | Calendario privado para suscribirse desde Google Calendar: eventos y tareas del personal. |
 | `tareas-programadas` | Automática | Cada 30 minutos reenvía a Loyverse lo pendiente, vence solicitudes y cotizaciones, manda el resumen diario de eventos y avisa si algo está en rojo. |
+
+## Taquilla y reservaciones en la página principal (Fusión B)
+
+- Una sola sección (`#tiquetes`, con `#reservas` apuntando al bloque de eventos): día, personas, rancho, cancha de tenis y evento, con el total en un boleto a la derecha. Código en `src/js/taquilla.js`, estilos en `layout/_taquilla.scss`.
+- **Compra** (hasta 50 personas): el botón lleva la selección a `tiquetes.html?f=&g=&m=&r=&tb=&ti=`, donde se elige el rancho en el mapa y se paga por SINPE.
+- **Cancha de tenis**: ₡1 500 la media hora (₡3 000 la hora), de 8:00 a 17:00, hasta 3 horas, siempre con al menos una entrada. Agenda `tenis_reservas` (un documento por media hora, `_id` «2026-12-05@540»), apartado de 15 minutos y firme al pagar, igual que los ranchos. En el panel, «Ranchos y cancha hoy» permite marcar la cancha pagada en la entrada.
+- **Eventos** (más de 50 personas, o quien lo marque desde 10): no se paga en línea. Se envía a `/api/cotizaciones` y aparece en `/eventos` para Lexie. Entrada ₡3 000 desde 51 personas; área techada, comida, DJ y música quedan «por cotizar». Precios con impuestos incluidos.
 
 ## Compra de tiquetes y ranchos (compra v2, diciembre 2026)
 

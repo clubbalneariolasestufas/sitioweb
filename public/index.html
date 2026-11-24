@@ -50,8 +50,8 @@
                     <li><a class="nav__enlace" href="#inicio">Inicio</a></li>
                     <li><a class="nav__enlace" href="#servicios">Servicios</a></li>
                     <li><a class="nav__enlace" href="#senderos">Senderos</a></li>
-                    <li><a class="nav__enlace" href="#tiquetes">Tiquetes</a></li>
-                    <li><a class="nav__enlace" href="#reservas">Reservas</a></li>
+                    <li><a class="nav__enlace" href="#tiquetes">Taquilla</a></li>
+                    <li><a class="nav__enlace" href="#reservas">Eventos y grupos</a></li>
                     <li><a class="nav__enlace" href="#eventos">Eventos</a></li>
                     <li><a class="nav__enlace" href="#galeria">Galería</a></li>
                     <li><a class="nav__enlace" href="#contacto">Contacto</a></li>
@@ -74,7 +74,7 @@
                     <h1 class="hero__titulo">¡Un lugar para disfrutar en familia!</h1>
                     <p class="hero__texto">Piscinas, toboganes, zonas verdes y senderos con pequeñas cataratas. Pase el día en la naturaleza y entre con su código QR.</p>
                     <div class="hero__acciones">
-                        <a class="boton boton--naranja" href="tiquetes.html">Comprar entradas</a>
+                        <a class="boton boton--naranja" href="#tiquetes">Comprar entradas</a>
                         <a class="boton boton--borde" href="#servicios">Ver servicios</a>
                     </div>
                 </div>
@@ -145,134 +145,139 @@
                         <li>Pequeñas cataratas para disfrutar y fotografiar</li>
                         <li>Parque con zonas verdes y mucha sombra</li>
                     </ul>
-                    <a class="boton boton--naranja" href="tiquetes.html">Visítenos: compre su entrada</a>
+                    <a class="boton boton--naranja" href="#tiquetes">Visítenos: compre su entrada</a>
                 </div>
             </div>
         </section>
 
         <!-- TIQUETES -->
-        <section id="tiquetes" class="seccion">
-            <div class="contenedor tiquetes">
-                <h2 class="seccion__titulo">Compre su tiquete en línea</h2>
-                <p class="seccion__subtitulo">Elija el día, cuántas personas vienen y, si quiere, un rancho en el mapa. Pague por SINPE Móvil y presente su código QR al llegar.</p>
-                <div class="tiquete-cine">
-                    <div class="tiquete-cine__cuerpo">
-                        <span class="tiquete-cine__etiqueta">ADMITE UNO · TODOS LOS DÍAS</span>
-                        <h3 class="tiquete-cine__nombre">Entrada general</h3>
-                        <p class="tiquete-cine__texto">Piscina semiolímpica, piscina del tobogán, piscina accesible, senderos a las cataratas y cancha de tenis.</p>
-                        <a class="boton boton--naranja" href="tiquetes.html">Comprar tiquete</a>
+        <section id="tiquetes" class="seccion seccion--crema">
+            <div class="contenedor taquilla">
+                <header class="taquilla__cabeza">
+                    <span class="taquilla__eyebrow">TAQUILLA Y RESERVACIONES</span>
+                    <h2 class="seccion__titulo taquilla__titulo">Arme su visita en un solo lugar</h2>
+                    <p class="taquilla__intro">Entrada general <strong>₡3 500</strong>: acceso a las 3 piscinas, áreas comunes, senderos y parqueo. Sume un rancho o la cancha de tenis y, si vienen más de 50, convierta su visita en evento.</p>
+                </header>
+
+                <div class="taquilla__cuerpo">
+                    <div class="taquilla__pasos">
+                        <!-- 1 · Día -->
+                        <div class="taquilla__bloque">
+                            <div class="taquilla__fila">
+                                <h3 class="taquilla__h3">1 · ¿Qué día viene?</h3>
+                                <span class="taquilla__nota">8:00 a 17:00, feriados incluidos · miércoles cerrado</span>
+                            </div>
+                            <div class="taquilla__dias" id="tq-dias" role="group" aria-label="Próximos días"></div>
+                            <label class="taquilla__otra">Otra fecha <input class="formulario__control" id="tq-otra-fecha" type="date"></label>
+                        </div>
+
+                        <!-- 2 · Personas -->
+                        <div class="taquilla__bloque">
+                            <div class="taquilla__fila">
+                                <h3 class="taquilla__h3">2 · ¿Cuántos vienen?</h3>
+                                <span class="taquilla__atajos">
+                                    <button type="button" class="taquilla__atajo" data-atajo="2,0">Pareja</button>
+                                    <button type="button" class="taquilla__atajo" data-atajo="4,1">Familia</button>
+                                    <button type="button" class="taquilla__atajo" data-atajo="60,0">Grupo de 60</button>
+                                </span>
+                            </div>
+                            <div class="taquilla__contador">
+                                <span class="taquilla__concepto"><strong>Entrada general</strong><small id="tq-general-precio">₡3 500 por persona</small></span>
+                                <span class="taquilla__botones">
+                                    <button type="button" class="taquilla__mas" data-campo="general" data-paso="-1" aria-label="Una entrada general menos">−</button>
+                                    <span class="taquilla__num" id="tq-general" aria-live="polite">2</span>
+                                    <button type="button" class="taquilla__mas" data-campo="general" data-paso="1" aria-label="Una entrada general más">+</button>
+                                </span>
+                            </div>
+                            <div class="taquilla__contador">
+                                <span class="taquilla__concepto"><strong>Menores de 4 años</strong><small>Gratis</small></span>
+                                <span class="taquilla__botones">
+                                    <button type="button" class="taquilla__mas" data-campo="menores" data-paso="-1" aria-label="Un menor menos">−</button>
+                                    <span class="taquilla__num" id="tq-menores" aria-live="polite">0</span>
+                                    <button type="button" class="taquilla__mas" data-campo="menores" data-paso="1" aria-label="Un menor más">+</button>
+                                </span>
+                            </div>
+                            <p class="taquilla__aviso" id="tq-aviso-grupo" role="status" hidden></p>
+                        </div>
+
+                        <!-- 3 · Complementos -->
+                        <div class="taquilla__bloque">
+                            <h3 class="taquilla__h3">3 · Complementos</h3>
+                            <div class="taquilla__contador taquilla__contador--borde">
+                                <span class="taquilla__concepto"><strong>Rancho de bambú</strong><small id="tq-ranchos-detalle">Hasta 8 personas, con agua y basurero</small></span>
+                                <span class="taquilla__botones">
+                                    <button type="button" class="taquilla__mas taquilla__mas--oscuro" data-campo="ranchos" data-paso="-1" aria-label="Un rancho menos">−</button>
+                                    <span class="taquilla__num taquilla__num--ancho" id="tq-ranchos" aria-live="polite">Ninguno</span>
+                                    <button type="button" class="taquilla__mas taquilla__mas--oscuro" data-campo="ranchos" data-paso="1" aria-label="Un rancho más">+</button>
+                                </span>
+                            </div>
+                            <div class="taquilla__contador taquilla__contador--borde">
+                                <span class="taquilla__concepto"><strong>Cancha de tenis</strong><small>₡1 500 la media hora · ₡3 000 la hora</small></span>
+                                <span class="taquilla__botones">
+                                    <button type="button" class="taquilla__mas taquilla__mas--oscuro" data-campo="tenis" data-paso="-1" aria-label="Media hora de tenis menos">−</button>
+                                    <span class="taquilla__num taquilla__num--ancho" id="tq-tenis" aria-live="polite">No</span>
+                                    <button type="button" class="taquilla__mas taquilla__mas--oscuro" data-campo="tenis" data-paso="1" aria-label="Media hora de tenis más">+</button>
+                                </span>
+                            </div>
+                            <div class="taquilla__horario" id="tq-tenis-horario" hidden>
+                                <div class="taquilla__fila"><strong>¿A qué hora empieza a jugar?</strong><span class="taquilla__nota" id="tq-tenis-rango"></span></div>
+                                <div class="tq-horas" id="tq-horas"></div>
+                                <span class="taquilla__nota">Tachado = reservado</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 · Evento -->
+                        <div class="taquilla__bloque taquilla__bloque--evento" id="reservas">
+                            <div class="taquilla__fila">
+                                <span class="taquilla__concepto">
+                                    <h3 class="taquilla__h3">4 · ¿Es un evento?</h3>
+                                    <small>Cumpleaños, empresa, excursión o baile · más de 50 personas: ₡3 000 por entrada</small>
+                                </span>
+                                <button type="button" class="taquilla__interruptor" id="tq-evento" aria-pressed="false">No, solo pasear</button>
+                            </div>
+                            <div class="taquilla__evento" id="tq-evento-detalle" hidden>
+                                <span class="taquilla__etiqueta">Tipo de actividad</span>
+                                <div class="taquilla__chips" id="tq-tipos" role="group" aria-label="Tipo de actividad"></div>
+                                <span class="taquilla__etiqueta">¿Qué va a necesitar?</span>
+                                <div class="taquilla__chips" id="tq-servicios" role="group" aria-label="Servicios"></div>
+                                <span class="taquilla__etiqueta">¿Dónde lo hacemos?</span>
+                                <div class="taquilla__chips" id="tq-espacios" role="group" aria-label="Lugar del evento"></div>
+                                <form class="taquilla__datos" id="tq-form-evento" novalidate>
+                                    <p class="formulario__trampa" aria-hidden="true"><label>No llenar: <input name="web" tabindex="-1" autocomplete="off"></label></p>
+                                    <label class="taquilla__campo">Nombre o institución<input class="formulario__control" id="tq-nombre" maxlength="80" autocomplete="name"></label>
+                                    <label class="taquilla__campo">WhatsApp<input class="formulario__control" id="tq-telefono" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="8888-8888"></label>
+                                    <label class="taquilla__campo taquilla__campo--ancho">Correo (opcional)<input class="formulario__control" id="tq-correo" type="email" maxlength="120" autocomplete="email"></label>
+                                </form>
+                                <p class="taquilla__nota taquilla__nota--clara">Comida, DJ y música se cotizan aparte. Lexie confirma la disponibilidad del área techada y le envía la cotización por WhatsApp. No se paga nada todavía.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="tiquete-cine__talon">
-                        <span class="tiquete-cine__precio">₡3 500</span>
-                        <span class="tiquete-cine__unidad">por persona</span>
-                    </div>
+
+                    <!-- Resumen como boleto -->
+                    <aside class="taquilla__resumen" aria-label="Resumen de su visita">
+                        <div class="taquilla__boleto">
+                            <div class="taquilla__boleto-cuerpo">
+                                <span class="taquilla__eyebrow">SU VISITA</span>
+                                <strong class="taquilla__fecha" id="tq-fecha-texto">Elija el día</strong>
+                                <ul class="taquilla__lineas" id="tq-lineas"></ul>
+                            </div>
+                            <div class="taquilla__talon">
+                                <span class="taquilla__total-fila"><span id="tq-total-etiqueta">Total a pagar</span><strong class="taquilla__total" id="tq-total" aria-live="polite">₡0</strong></span>
+                                <button type="button" class="boton boton--naranja boton--completo" id="tq-accion">Elija el día</button>
+                                <p class="taquilla__mensaje" id="tq-mensaje" role="status" hidden></p>
+                            </div>
+                        </div>
+                        <a class="taquilla__seguimiento" href="cotizar.html#seguimiento">¿Ya pidió un evento? Vea su solicitud</a>
+                    </aside>
                 </div>
+
                 <ul class="tiquetes__chips">
                     <li>Menores de 4 años: gratis</li>
                     <li>Válido solo para la fecha elegida</li>
                     <li>También en efectivo en la entrada</li>
-                    <li>Todos los días de 8:00 a 17:00, feriados incluidos</li>
                     <li class="tiquetes__chip--oscuro">Cerrado los miércoles</li>
                 </ul>
-                <div class="tiquetes__ranchos">
-                    <div class="tiquetes__ranchos-texto">
-                        <span class="tiquete-cine__etiqueta">OPCIONAL</span>
-                        <h3>Aparte su rancho de bambú</h3>
-                        <p>7 ranchos para hasta 8 personas cada uno, con agua propia y basurero. Sábados y domingos cuestan ₡10 000; de lunes a viernes se apartan sin costo, si hay disponibilidad.</p>
-                        <a class="boton boton--naranja" href="tiquetes.html">Comprar y elegir rancho</a>
-                    </div>
-                    <div class="tiquetes__mapa" id="mapa-inicio" aria-label="Mapa del balneario con los 7 ranchos"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- RESERVAS -->
-        <section id="reservas" class="seccion seccion--noche">
-            <h2 class="seccion__titulo">Reservaciones</h2>
-            <p class="seccion__subtitulo">Ranchos, eventos con música y la cancha de tenis: envíenos su solicitud y le confirmamos.</p>
-            <div class="reservas">
-                <div class="reservas__info">
-                    <h3>¿Qué puede reservar?</h3>
-                    <ul>
-                        <li><strong>Ranchos de bambú</strong> para hasta 8 personas: se apartan al <a href="tiquetes.html">comprar su tiquete en línea</a>.</li>
-                        <li><strong>Eventos</strong>: bailes, música con DJ, cumpleaños y actividades de empresa.</li>
-                        <li><strong>Cancha de tenis</strong> profesional, por hora.</li>
-                    </ul>
-                    <div class="reservas__cotizar">
-                        <h3>¿Grupo de 10 o más personas?</h3>
-                        <p>Excursiones, actividades de empresa, cumpleaños y convivios: arme su día desde el celular y vea el precio al instante.</p>
-                        <a class="boton boton--naranja" href="cotizar.html">Cotizar en línea</a>
-                        <a class="boton boton--borde" href="cotizar.html#seguimiento">Ver mi solicitud</a>
-                    </div>
-                </div>
-                <div class="reservas__formulario">
-                    <form id="form-reservas" class="formulario" name="reservas" method="POST" data-netlify="true" netlify-honeypot="campo-trampa">
-                        <input type="hidden" name="form-name" value="reservas">
-                        <p class="formulario__trampa" aria-hidden="true"><label>No llenar: <input name="campo-trampa" tabindex="-1" autocomplete="off"></label></p>
-
-                        <fieldset style="border:0;padding:0;margin:0">
-                            <legend class="formulario__etiqueta">¿Qué desea reservar?</legend>
-                            <div class="formulario__opciones">
-                                                                <label class="formulario__opcion"><input type="radio" name="tipo" value="evento" checked><span>Evento</span></label>
-                                <label class="formulario__opcion"><input type="radio" name="tipo" value="tenis"><span>Cancha de tenis</span></label>
-                            </div>
-                        </fieldset>
-
-                        <div class="formulario__fila formulario__fila--doble">
-                            <div class="formulario__campo">
-                                <label class="formulario__etiqueta" for="fecha">Fecha</label>
-                                <input class="formulario__control" id="fecha" name="fecha" type="date" required>
-                            </div>
-                            <div class="formulario__campo" data-solo="evento">
-                                <label class="formulario__etiqueta" for="personas">Cantidad de personas</label>
-                                <input class="formulario__control" id="personas" name="personas" type="number" min="1" max="500" value="10">
-                            </div>
-                        </div>
-
-                        <div class="formulario__campo" data-solo="evento" hidden>
-                            <label class="formulario__etiqueta" for="tipo-evento">Tipo de evento</label>
-                            <select class="formulario__control" id="tipo-evento" name="tipo-evento">
-                                <option>Baile</option>
-                                <option>Música con DJ</option>
-                                <option>Cumpleaños</option>
-                                <option>Actividad de empresa</option>
-                                <option>Otro</option>
-                            </select>
-                        </div>
-
-                        <div class="formulario__fila formulario__fila--doble" data-solo="evento tenis" hidden>
-                            <div class="formulario__campo">
-                                <label class="formulario__etiqueta" for="hora-inicio">Hora de inicio</label>
-                                <input class="formulario__control" id="hora-inicio" name="hora-inicio" type="time">
-                            </div>
-                            <div class="formulario__campo">
-                                <label class="formulario__etiqueta" for="hora-fin">Hora de fin</label>
-                                <input class="formulario__control" id="hora-fin" name="hora-fin" type="time">
-                            </div>
-                        </div>
-
-                        <div class="formulario__fila formulario__fila--doble">
-                            <div class="formulario__campo">
-                                <label class="formulario__etiqueta" for="nombre-reserva">Nombre</label>
-                                <input class="formulario__control" id="nombre-reserva" name="nombre" type="text" required autocomplete="name">
-                            </div>
-                            <div class="formulario__campo">
-                                <label class="formulario__etiqueta" for="telefono-reserva">WhatsApp o teléfono</label>
-                                <input class="formulario__control" id="telefono-reserva" name="telefono" type="tel" required autocomplete="tel">
-                            </div>
-                        </div>
-                        <div class="formulario__campo">
-                            <label class="formulario__etiqueta" for="correo">Correo (opcional)</label>
-                            <input class="formulario__control" id="correo" name="correo" type="email" autocomplete="email">
-                        </div>
-                        <div class="formulario__campo">
-                            <label class="formulario__etiqueta" for="comentarios">Comentarios</label>
-                            <textarea class="formulario__control" id="comentarios" name="comentarios"></textarea>
-                        </div>
-                        <button class="boton boton--naranja" type="submit">Enviar solicitud</button>
-                        <p id="reservas-mensaje" class="formulario__mensaje" hidden role="status"></p>
-                    </form>
-                </div>
+                <noscript><p class="taquilla__intro"><a href="tiquetes.html">Compre aquí su entrada</a> o escríbanos por WhatsApp para eventos.</p></noscript>
             </div>
         </section>
 

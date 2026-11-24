@@ -3,12 +3,13 @@
 
 // Los precios de entradas y ranchos viven en src/js/precios-tiquetes.js (un solo archivo para sitio y servidor).
 export { DIAS_CERRADO, MAX_PERSONAS, MAX_DIAS_ADELANTE, PRECIO_ENTRADA, PRECIO_RANCHO_FINDE } from '../../../src/js/precios-tiquetes.js'
-import { PRECIO_ENTRADA, PRECIO_RANCHO_FINDE } from '../../../src/js/precios-tiquetes.js'
+import { PRECIO_ENTRADA, PRECIO_RANCHO_FINDE, PRECIO_TENIS_MEDIA_HORA } from '../../../src/js/precios-tiquetes.js'
 
 // Artículos que se registran en Loyverse (variable LOYVERSE_VARIANT_<ID> con el variant_id de cada uno)
 export const PRODUCTOS_LOYVERSE = {
     general: { nombre: 'Entrada general', precio: PRECIO_ENTRADA },
-    rancho: { nombre: 'Rancho (fin de semana)', precio: PRECIO_RANCHO_FINDE }
+    rancho: { nombre: 'Rancho (fin de semana)', precio: PRECIO_RANCHO_FINDE },
+    tenis: { nombre: 'Cancha de tenis (media hora)', precio: PRECIO_TENIS_MEDIA_HORA }
 }
 export const ORDEN_VENCE_MIN = Number(process.env.ORDEN_VENCE_MIN || 120)
 export const MAX_INTENTOS = 5                // intentos de verificar un pago por orden

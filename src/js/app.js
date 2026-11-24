@@ -1,5 +1,5 @@
 import { CONFIG, EVENTOS, fechaLarga } from './datos.js'
-import { crearMapa } from './mapa-balneario.js'
+import { iniciarTaquilla } from './taquilla.js'
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel)
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)]
@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resaltarSeccion()
     pintarEventos()
     pintarGaleria()
-    mapaInicio()
-    formularioReservas()
+    iniciarTaquilla()
     enlacesContacto()
     $('#anio').textContent = new Date().getFullYear()
 })
@@ -126,56 +125,6 @@ function activarCierre(dialogo) {
     $$('[data-cerrar]', dialogo).forEach(b => b.addEventListener('click', () => dialogo.close()))
     dialogo.addEventListener('click', e => { if (e.target === dialogo) dialogo.close() })
     dialogo.addEventListener('close', () => document.body.classList.remove('sin-scroll'))
-}
-
-/* ---------- Mapa de ranchos en la sección de tiquetes ---------- */
-function mapaInicio() {
-    const caja = $('#mapa-inicio')
-    if (!caja) return
-    const pintar = () => crearMapa(caja, { escala: Math.max(0.42, Math.min(0.62, caja.clientWidth / 1280)), ocupados: [], elegidos: [], alElegir: () => { location.href = 'tiquetes.html' } })
-    pintar()
-    let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(pintar, 200) })
-}
-
-/* ---------- Reservas (eventos y cancha de tenis) ---------- */
-function formularioReservas() {
-    const form = $('#form-reservas')
-    const mensaje = $('#reservas-mensaje')
-    const fecha = $('[name=fecha]', form)
-    fecha.min = new Date().toISOString().slice(0, 10)
-
-    const actualizarCampos = () => {
-        const tipo = form.tipo.value
-        $$('[data-solo]', form).forEach(campo => {
-            const visible = campo.dataset.solo.split(' ').includes(tipo)
-            campo.hidden = !visible
-            $$('input, select', campo).forEach(c => { c.disabled = !visible })
-        })
-    }
-    form.addEventListener('change', e => { if (e.target.name === 'tipo') actualizarCampos() })
-    actualizarCampos()
-
-    form.addEventListener('submit', async e => {
-        e.preventDefault()
-        mensaje.hidden = true
-        try {
-            const datos = new URLSearchParams(new FormData(form))
-            const resp = await fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: datos.toString()
-            })
-            if (!resp.ok) throw new Error()
-            mensaje.className = 'formulario__mensaje'
-            mensaje.textContent = '¡Solicitud enviada! Le confirmaremos por WhatsApp o correo.'
-            form.reset()
-            actualizarCampos()
-        } catch {
-            mensaje.className = 'formulario__mensaje formulario__mensaje--error'
-            mensaje.textContent = 'No se pudo enviar. Escríbanos por WhatsApp e indique su fecha.'
-        }
-        mensaje.hidden = false
-    })
 }
 
 /* ---------- Enlaces de contacto ---------- */

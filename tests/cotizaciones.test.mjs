@@ -32,25 +32,35 @@ function fechaLibre(offset = 10) {
 }
 const solicitud = (extra = {}) => ({
     tipoEvento: 'Excursión escolar', fechaEvento: fechaLibre(), horaInicio: '09:00', horaFin: '15:00',
-    seleccion: { personas: { adultos: 4, ninos: 30 }, areas: ['rancho'], menu: 'casado', extras: ['sonido'] },
+    seleccion: { personas: { adultos: 4, ninos: 30 }, areas: ['techada'], menu: 'comida', extras: ['dj'] },
     nombre: 'Escuela Palmitos', telefono: '8888-1234', correo: 'dir@escuela.cr', ...extra
 })
 
-test('cálculo: entradas, áreas, menú por persona, servicio solo en comida, IVA y adelanto', () => {
-    const c = P.calcular({ personas: { adultos: 4, ninos: 30 }, areas: ['rancho'], menu: 'casado', extras: ['sonido'] })
-    assert.equal(c.personas, 34)
-    assert.equal(c.entradas, 4 * 6000 + 30 * 3000)
-    assert.equal(c.alimentacion, 34 * 4500)
-    assert.equal(c.servicio, Math.round(34 * 4500 * 0.10))
-    assert.equal(c.subtotal, 114000 + 25000 + 153000 + 15000)
-    assert.equal(c.iva, Math.round((c.subtotal + c.servicio) * 0.13))
-    assert.equal(c.total, c.subtotal + c.servicio + c.iva)
+test('cálculo: entrada ₡3 500, menores gratis, ranchos según el día y extras por cotizar', () => {
+    const c = P.calcular({ personas: { adultos: 20, ninos: 5 }, areas: ['techada', 'ranchos', 'tenis'], ranchos: 2, horasTenis: 1, menu: 'comida', extras: ['dj', 'musica'] }, '2026-12-05')
+    assert.equal(c.personas, 25)
+    assert.equal(c.entradas, 20 * 3500)
+    assert.equal(c.areas, 2 * 10000 + 3000, 'sábado: rancho ₡10 000; cancha ₡3 000 la hora')
+    assert.equal(c.alimentacion, 0)
+    assert.equal(c.iva, 0, 'precios con impuestos incluidos')
+    assert.equal(c.total, 20 * 3500 + 23000)
+    assert.ok(c.porCotizar)
+    assert.ok(c.lineas.some(l => l.concepto === 'DJ (por cotizar)'))
     assert.equal(c.adelanto + c.saldo, c.total)
+    assert.equal(P.calcular({ personas: { adultos: 20 }, areas: ['ranchos'], ranchos: 2 }, '2026-12-07').areas, 0, 'entre semana el rancho no cobra')
+})
+
+test('cálculo: de 51 personas en adelante la entrada baja a ₡3 000', () => {
+    assert.equal(P.calcular({ personas: { adultos: 50 } }).entradas, 50 * 3500)
+    const g = P.calcular({ personas: { adultos: 60, ninos: 4 } })
+    assert.equal(g.entradas, 60 * 3000)
+    assert.ok(g.grupo)
+    assert.match(g.lineas[0].concepto, /precio de grupo/)
 })
 
 test('cálculo: ignora lo desconocido y cantidades raras', () => {
-    const c = P.calcular({ personas: { adultos: -5, ninos: 2.7, vip: 99 }, areas: ['rancho', 'piscina-privada', 'rancho'], menu: 'caviar', extras: ['x'] })
-    assert.deepEqual(c.seleccion.areas, ['rancho'])
+    const c = P.calcular({ personas: { adultos: -5, ninos: 2.7, vip: 99 }, areas: ['techada', 'piscina-privada', 'techada'], menu: 'caviar', extras: ['x'] })
+    assert.deepEqual(c.seleccion.areas, ['techada'])
     assert.equal(c.seleccion.menu, 'ninguno')
     assert.equal(c.personas, 2)
 })
@@ -74,21 +84,21 @@ test('rechaza datos inválidos', async () => {
     const casos = [
         { tipoEvento: 'Rave' }, { fechaEvento: hoyCR() }, { fechaEvento: miercoles }, { fechaEvento: '2026-02-30' },
         { horaInicio: '15:00', horaFin: '09:00' }, { nombre: 'A' }, { telefono: '12' }, { correo: 'x@' }, { web: 'bot' },
-        { seleccion: { personas: { adultos: 3 }, areas: ['rancho'] } }
+        { seleccion: { personas: { adultos: 3 }, areas: ['techada'] } }
     ]
     for (const c of casos) assert.equal((await post(cotizar, solicitud(c))).status, 400, JSON.stringify(c))
     assert.equal(db.collection('cotizaciones').filas.length, 0)
 })
 
-test('no permite dos grupos en el mismo rancho el mismo día, pero sí otra área', async () => {
+test('no permite dos grupos en el área techada el mismo día, pero sí uno con ranchos', async () => {
     assert.equal((await post(cotizar, solicitud())).status, 201)
     const r = await post(cotizar, solicitud({ nombre: 'Empresa XYZ' }))
     assert.equal(r.status, 409)
-    assert.match((await r.json()).error, /Rancho/)
-    const otra = solicitud({ nombre: 'Empresa XYZ' }); otra.seleccion = { ...otra.seleccion, areas: ['salon'] }
+    assert.match((await r.json()).error, /Área techada/)
+    const otra = solicitud({ nombre: 'Empresa XYZ' }); otra.seleccion = { ...otra.seleccion, areas: ['ranchos'], ranchos: 3 }
     assert.equal((await post(cotizar, otra)).status, 201)
     const d = await (await get(disponibilidad, `/api/disponibilidad?desde=${solicitud().fechaEvento}&dias=1`)).json()
-    assert.deepEqual(d.dias[0].ocupadas.sort(), ['rancho', 'salon'])
+    assert.deepEqual(d.dias[0].ocupadas, ['techada'])
     assert.equal(d.dias[0].lleno, true)
     assert.ok(!JSON.stringify(d).includes('Escuela'), 'no expone datos de clientes')
 })
@@ -150,7 +160,7 @@ test('administración: flujo completo de estados con adelanto y total ajustado',
 })
 
 test('tareas automáticas: fechas relativas al evento y cocina solo con menú', () => {
-    const t = P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'casado' } })
+    const t = P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'comida' } })
     assert.deepEqual(t.map(x => [x.id, x.fecha]), [['cocina', '2026-12-04'], ['cantidad', '2026-12-08'], ['saldo', '2026-12-09'], ['areas', '2026-12-10'], ['puerta', '2026-12-11']])
     assert.equal(P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'ninguno' } }).length, 4)
 })

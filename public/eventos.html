@@ -321,7 +321,7 @@
             const total = c.totalFinal ?? c.calculo.total, adelanto = c.adelantoFinal ?? c.calculo.adelanto
             const enlace = `${location.origin}/cotizar.html#seguimiento`
             const lineas = c.calculo.lineas.map(l => `• ${l.concepto}${l.cantidad > 1 ? ' × ' + l.cantidad : ''}: ${colones(l.monto)}`).join('\n')
-            return `Hola ${c.nombre}, le saluda el Club Balneario Las Estufas. Esta es la cotización ${c.codigo} para el ${fechaLarga(c.fechaEvento)}:\n${lineas}\nTotal con IVA: ${colones(total)}\nPara reservar la fecha, haga un SINPE Móvil de ${colones(adelanto)} al 6003-4009 con el detalle ${c.codigo} y envíenos el comprobante. La cotización vale ${REGLAS.diasValidez} días.\nPuede ver el estado aquí: ${enlace}`
+            return `Hola ${c.nombre}, le saluda el Club Balneario Las Estufas. Esta es la cotización ${c.codigo} para el ${fechaLarga(c.fechaEvento)}:\n${lineas}\nTotal: ${colones(total)}\nPara reservar la fecha, haga un SINPE Móvil de ${colones(adelanto)} al 6003-4009 con el detalle ${c.codigo} y envíenos el comprobante. La cotización vale ${REGLAS.diasValidez} días.\nPuede ver el estado aquí: ${enlace}`
         }
         function pintarDetalle(c) {
             const d = $('#detalle'); d.hidden = false; d.replaceChildren()
@@ -333,7 +333,7 @@
             const dl = el('dl', 'datos')
             const fila = (k, v) => dl.append(el('dt', '', k), typeof v === 'string' ? el('dd', '', v) : (() => { const dd = el('dd'); dd.append(v); return dd })())
             fila('Fecha', `${fechaLarga(c.fechaEvento)}${c.horaInicio ? `, ${c.horaInicio} a ${c.horaFin}` : ''}`)
-            fila('Personas', `${c.calculo.personas} (${['adultos', 'ninos', 'mayores'].map(k => c.seleccion.personas[k] ? `${c.seleccion.personas[k]} ${k === 'ninos' ? 'niños' : k}` : '').filter(Boolean).join(', ')})`)
+            fila('Personas', `${c.calculo.personas} (${['adultos', 'ninos', 'mayores'].map(k => c.seleccion.personas[k] ? `${c.seleccion.personas[k]} ${k === 'ninos' ? 'menores de 4' : k === 'adultos' ? 'entradas' : k}` : '').filter(Boolean).join(', ')})`)
             fila('Áreas', (c.seleccion.areas || []).map(nombreArea).join(', ') || '—')
             fila('Comida', nombreMenu(c.seleccion.menu))
             const tel = el('a', '', c.telefono.replace(/(\d{4})(\d{4})$/, '$1-$2')); tel.href = `https://wa.me/${c.telefono.length === 8 ? '506' + c.telefono : c.telefono}`; tel.target = '_blank'; tel.rel = 'noopener'
@@ -345,7 +345,7 @@
 
             const t = el('table', 'desglose'), tb = el('tbody')
             c.calculo.lineas.forEach(l => { const tr = el('tr'); tr.append(el('td', '', l.cantidad > 1 ? `${l.concepto} × ${l.cantidad}` : l.concepto), el('td', '', colones(l.monto))); tb.append(tr) })
-            ;[['Servicio 10 %', c.calculo.servicio], ['IVA 13 %', c.calculo.iva], ['Total calculado', c.calculo.total]].forEach(([k, v]) => { const tr = el('tr'); tr.append(el('td', '', k), el('td', '', colones(v))); tb.append(tr) })
+            ;[['Servicio 10 %', c.calculo.servicio], ...(c.calculo.iva ? [['IVA', c.calculo.iva]] : []), ['Total calculado', c.calculo.total]].forEach(([k, v]) => { const tr = el('tr'); tr.append(el('td', '', k), el('td', '', colones(v))); tb.append(tr) })
             if (c.totalFinal != null) { const tr = el('tr', 'total'); tr.append(el('td', '', 'Total acordado'), el('td', '', colones(c.totalFinal))); tb.append(tr) }
             else tb.lastChild.className = 'total'
             t.append(tb); d.append(t)

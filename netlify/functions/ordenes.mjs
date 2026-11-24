@@ -5,7 +5,8 @@ import { MAX_PERSONAS, MAX_DIAS_ADELANTE, ORDEN_VENCE_MIN, MAX_ORDENES_POR_HORA,
 import { hoyCR, fechaValida, diasEntre } from './_lib/fechas.mjs'
 import { huella } from './_lib/tokens.mjs'
 import { calcularCompra, resumenCompra, estaCerrado, CAPACIDAD_RANCHO, HORARIO } from '../../src/js/precios-tiquetes.js'
-import { apartarRanchos } from './_lib/ranchos.mjs'
+import { apartarRanchos, liberarRanchos } from './_lib/ranchos.mjs'
+import { apartarTenis } from './_lib/tenis.mjs'
 
 // Sin letras ni números que se confundan (0/O, 1/I)
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -32,7 +33,9 @@ export default async (req, context) => {
         if (!Number.isInteger(v) || v < 0 || v > MAX_PERSONAS) return json({ error: 'Cantidad de personas no válida' }, 400)
     }
     if (Array.isArray(d.ranchos) && d.ranchos.some(n => !Number.isInteger(n))) return json({ error: 'Rancho no válido' }, 400)
-    const c = calcularCompra({ general: d.general, menores: d.menores, ranchos: d.ranchos, fecha })
+    const c = calcularCompra({ general: d.general, menores: d.menores, ranchos: d.ranchos, fecha, tenis: d.tenis })
+    if (d.tenis && !c.tenis) return json({ error: 'Horario de cancha no válido: medias horas entre 8:00 y 17:00, máximo 3 horas' }, 400)
+    if (c.tenis && fecha === hoy) { const [hh, mm] = horaCR().split(':').map(Number); if (c.tenis.inicio < hh * 60 + mm) return json({ error: 'Esa hora de cancha ya pasó. Elija otra.' }, 400) }
     if (c.ranchos.length !== (Array.isArray(d.ranchos) ? d.ranchos.length : 0)) return json({ error: 'Rancho no válido' }, 400)
     if (c.general < 1) return json({ error: 'Agregue al menos una entrada general' }, 400)
     if (c.personas > MAX_PERSONAS) return json({ error: `Máximo ${MAX_PERSONAS} personas por compra` }, 400)
@@ -57,7 +60,7 @@ export default async (req, context) => {
         estado: 'pendiente',
         // paseId/nombrePase/cantidad se mantienen para el panel, los boletos y los reportes
         paseId: 'general', nombrePase: resumenCompra(c), cantidad: c.personas,
-        general: c.general, menores: c.menores, ranchos: c.ranchos, lineas: c.lineas,
+        general: c.general, menores: c.menores, ranchos: c.ranchos, tenis: c.tenis, lineas: c.lineas,
         total: c.total,
         fechaVisita: fecha,
         nombre, telefono, correo,
@@ -82,6 +85,16 @@ export default async (req, context) => {
                 return json({ error: `El rancho ${r.ocupado} se acaba de ocupar. Elija otro en el mapa.`, ranchoOcupado: r.ocupado }, 409)
             }
             ranchoHasta = r.hasta
+            await col.updateOne({ codigo: orden.codigo }, { $set: { ranchoHastaEn: ranchoHasta } })
+        }
+        if (c.tenis) {
+            const t = await apartarTenis(db, { fecha, inicio: c.tenis.inicio, bloques: c.tenis.bloques, orden: orden.codigo, ahora })
+            if (!t.ok) {
+                await liberarRanchos(db, orden.codigo)
+                await col.updateOne({ codigo: orden.codigo }, { $set: { estado: 'anulada', motivo: 'cancha ocupada' } })
+                return json({ error: `La cancha de tenis ya está reservada a las ${t.ocupado}. Elija otra hora.`, tenisOcupado: t.ocupado }, 409)
+            }
+            ranchoHasta ??= t.hasta
             await col.updateOne({ codigo: orden.codigo }, { $set: { ranchoHastaEn: ranchoHasta } })
         }
         return json({

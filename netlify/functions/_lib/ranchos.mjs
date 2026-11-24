@@ -8,21 +8,23 @@ const COL = 'ranchos_reservas'
 const LEJOS = new Date('2100-01-01T00:00:00Z')
 const id = (fecha, n) => `${fecha}#${n}`
 
-// Intenta quedarse con un rancho. Se puede si nadie lo tiene, si ya es de esta orden,
-// o si el apartado anterior venció sin pagarse.
-async function tomarUno(col, fecha, n, orden, hasta, firme, ahora) {
-    const doc = { _id: id(fecha, n), fecha, rancho: n, orden, hasta, firme, actualizado: ahora }
+// Intenta quedarse con un cupo de una agenda (un rancho o media hora de cancha). Se puede si nadie
+// lo tiene, si ya es de esta orden, o si el apartado anterior venció sin pagarse.
+export async function tomarCupo(col, _id, datos, orden, hasta, firme, ahora) {
+    const doc = { _id, ...datos, orden, hasta, firme, actualizado: ahora }
     try {
         await col.insertOne(doc)
         return 'nuevo'
     } catch (e) {
         if (e?.code !== 11000) throw e
     }
-    const mio = await col.findOneAndUpdate({ _id: doc._id, orden }, { $set: { hasta, firme, actualizado: ahora } })
+    const mio = await col.findOneAndUpdate({ _id, orden }, { $set: { hasta, firme, actualizado: ahora } })
     if (mio) return 'mio'
-    const vencido = await col.findOneAndUpdate({ _id: doc._id, firme: false, hasta: { $lt: ahora } }, { $set: { orden, hasta, firme, actualizado: ahora } })
+    const vencido = await col.findOneAndUpdate({ _id, firme: false, hasta: { $lt: ahora } }, { $set: { orden, hasta, firme, actualizado: ahora } })
     return vencido ? 'nuevo' : null
 }
+const tomarUno = (col, fecha, n, orden, hasta, firme, ahora) => tomarCupo(col, id(fecha, n), { fecha, rancho: n }, orden, hasta, firme, ahora)
+export const LEJOS_2100 = LEJOS
 
 // Aparta (o confirma, con firme=true) varios ranchos para una orden. Todo o nada.
 export async function apartarRanchos(db, { fecha, ranchos, orden, firme = false, ahora = new Date() }) {

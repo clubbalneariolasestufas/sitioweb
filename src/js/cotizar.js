@@ -18,7 +18,7 @@ const estado = {
     tipoEvento: '',
     fechaEvento: '',
     personas: { adultos: 0, ninos: 0, mayores: 0 },
-    areas: ['rancho'],
+    areas: ['techada'],
     horasTenis: 1,
     menu: 'ninguno',
     extras: [],
@@ -213,7 +213,7 @@ function pintarResumen(c) {
         cuerpo.append(tr)
     })
     const pie = el('tfoot')
-    ;[['Subtotal', c.subtotal], ['Servicio 10 % (alimentación)', c.servicio], ['IVA 13 %', c.iva], ['Total', c.total], ['Adelanto 50 % para reservar', c.adelanto]].forEach(([k, v], i) => {
+    ;[['Subtotal', c.subtotal], ['Servicio 10 % (alimentación)', c.servicio], ...(c.iva ? [['IVA', c.iva]] : []), ['Total', c.total], ['Adelanto 50 % para reservar', c.adelanto]].forEach(([k, v], i) => {
         if (!v && i === 1) return
         const tr = el('tr', i === 3 ? 'cot-desglose__total' : '')
         tr.append(el('td', '', k), el('td', 'cot-desglose__monto', colones(v)))
@@ -242,7 +242,7 @@ function validarPaso(p) {
 }
 
 function actualizar() {
-    const c = calcular(seleccion())
+    const c = calcular(seleccion(), estado.fechaEvento || null)
     $('#barra-total').textContent = colones(c.total)
     $('#barra-adelanto').textContent = c.total ? `Adelanto para reservar: ${colones(c.adelanto)}` : 'Arme su día y vea el precio'
     $('#barra-personas').textContent = c.personas ? `Total · ${c.personas} personas` : 'Total estimado'

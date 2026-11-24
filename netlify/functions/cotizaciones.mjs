@@ -32,7 +32,7 @@ export default async (req, context) => {
     const horaFin = HORA.test(d.horaFin || '') ? d.horaFin : ''
     if (horaInicio && horaFin && horaFin <= horaInicio) return json({ error: 'La hora de fin debe ser después de la de inicio' }, 400)
 
-    const calculo = calcular(d.seleccion)
+    const calculo = calcular(d.seleccion, fecha)
     if (calculo.personas < REGLAS.minPersonas) return json({ error: `Las cotizaciones de grupo son a partir de ${REGLAS.minPersonas} personas` }, 400)
 
     const nombre = limpiar(d.nombre, 80)

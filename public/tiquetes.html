@@ -54,18 +54,34 @@
                     <li>Los tiquetes valen solo para la fecha elegida.</li>
                     <li>Menores de 4 años entran gratis; en la puerta se puede pedir confirmar la edad.</li>
                     <li>Cada rancho recibe máximo 8 personas, contando a los niños.</li>
+                    <li>Grupos de más de 50 personas: pidan su evento desde la página principal (₡3 000 por entrada).</li>
                     <li>En la entrada también se puede pagar en efectivo.</li>
                 </ul>
             </div>
         </section>
 
         <!-- 3 · Rancho -->
-        <section class="cot-paso" data-paso="3" data-titulo="¿Agregamos un rancho?" hidden>
+        <section class="cot-paso" data-paso="3" data-titulo="¿Rancho o cancha de tenis?" hidden>
             <p class="cot-paso__ayuda" id="rancho-condicion"></p>
             <p class="tq-aviso" id="rancho-aviso" role="status"></p>
             <div class="tq-mapa" id="mapa"></div>
             <span class="tq-pista">← Deslice el mapa para ver los 7 ranchos →</span>
-            <button type="button" class="boton boton--linea" id="sin-rancho">Seguir sin rancho</button>
+            <div class="tq-tenis">
+                <div class="tq-tenis__cabeza">
+                    <span><strong>Cancha de tenis</strong><small>₡1 500 la media hora · ₡3 000 la hora · 8:00 a 17:00</small></span>
+                    <span class="tq-tenis__contador">
+                        <button type="button" class="tq-linea__btn" id="tenis-menos" aria-label="Media hora menos">−</button>
+                        <span class="tq-tenis__num" id="tenis-duracion" aria-live="polite">No</span>
+                        <button type="button" class="tq-linea__btn" id="tenis-mas" aria-label="Media hora más">+</button>
+                    </span>
+                </div>
+                <div id="tenis-horario" hidden>
+                    <p class="tq-pista">¿A qué hora empieza a jugar? Tachado = reservado.</p>
+                    <div class="tq-horas" id="tenis-horas"></div>
+                    <p class="tq-tenis__nota" id="tenis-nota" role="status"></p>
+                </div>
+            </div>
+            <button type="button" class="boton boton--linea" id="sin-rancho">Continuar sin rancho</button>
         </section>
 
         <!-- 4 · Carrito -->

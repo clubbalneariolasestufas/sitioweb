@@ -3,9 +3,9 @@
 //   node --env-file=.env scripts/loyverse-prueba.mjs            -> solo revisa, no crea nada
 //   node --env-file=.env scripts/loyverse-prueba.mjs --recibo   -> además crea UN recibo real de prueba
 // El recibo de prueba es una venta real en el POS: después hay que reembolsarlo desde Loyverse.
-import { PRECIO_ENTRADA, PRECIO_RANCHO_FINDE } from '../src/js/precios-tiquetes.js'
+import { PRECIO_ENTRADA, PRECIO_RANCHO_FINDE, PRECIO_TENIS_MEDIA_HORA } from '../src/js/precios-tiquetes.js'
 const e = process.env
-const faltan = ['LOYVERSE_TOKEN', 'LOYVERSE_STORE_ID', 'LOYVERSE_PAYMENT_TYPE_ID', 'LOYVERSE_VARIANT_GENERAL', 'LOYVERSE_VARIANT_RANCHO'].filter(v => !e[v])
+const faltan = ['LOYVERSE_TOKEN', 'LOYVERSE_STORE_ID', 'LOYVERSE_PAYMENT_TYPE_ID', 'LOYVERSE_VARIANT_GENERAL', 'LOYVERSE_VARIANT_RANCHO', 'LOYVERSE_VARIANT_TENIS'].filter(v => !e[v])
 if (faltan.length) { console.error('Faltan variables en .env:\n  ' + faltan.join('\n  ')); process.exit(1) }
 
 const api = async (ruta, cuerpo) => {
@@ -35,7 +35,7 @@ try {
 
     const items = (await api('/items?limit=250')).items || []
     const variantes = new Map(items.flatMap(i => (i.variants || []).map(v => [v.variant_id, { ...v, nombre: i.item_name }])))
-    const precios = { GENERAL: PRECIO_ENTRADA, RANCHO: PRECIO_RANCHO_FINDE }   // salen de src/js/precios-tiquetes.js
+    const precios = { GENERAL: PRECIO_ENTRADA, RANCHO: PRECIO_RANCHO_FINDE, TENIS: PRECIO_TENIS_MEDIA_HORA }   // salen de src/js/precios-tiquetes.js
     for (const [clave, precioSitio] of Object.entries(precios)) {
         const v = variantes.get(e['LOYVERSE_VARIANT_' + clave])
         if (!v) { mal(`LOYVERSE_VARIANT_${clave} no coincide con ningún artículo`); continue }

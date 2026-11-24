@@ -269,3 +269,23 @@ $alto-barra: 9.6rem;
 }
 @keyframes tq-latido { 0%, 100% { box-shadow: 0 0 0 0 rgba(v.$naranja, .45); } 50% { box-shadow: 0 0 0 .8rem rgba(v.$naranja, 0); } }
 @media (prefers-reduced-motion: reduce) { .tq-espera__luz { animation: none; } }
+
+// Cancha de tenis por medias horas (paso 3 de tiquetes.html)
+.tq-tenis {
+    display: grid; gap: 1rem; padding: 1.4rem; border-radius: 1.4rem; background: v.$blanco; border: .15rem solid #d5e2e8;
+    &__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+        > span:first-child { display: flex; flex-direction: column; gap: .2rem; min-width: 0; small { font-size: 1.25rem; color: v.$gris; } }
+    }
+    &__contador { display: flex; align-items: center; gap: .6rem; }
+    &__num { min-width: 7rem; text-align: center; font-weight: 900; }
+    &__nota { margin: .6rem 0 0; font-weight: 800; color: v.$turquesa-oscuro; }
+    .tq-linea__btn:disabled { opacity: .35; cursor: not-allowed; }
+}
+.tq-horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr)); gap: .6rem; }
+.tq-hora {
+    min-height: 4.4rem; border-radius: 1rem; border: .2rem solid #b9cfd5; background: v.$blanco; color: v.$noche; font: 800 1.35rem v.$fuente; cursor: pointer;
+    &:disabled { color: #9aa9b1; border-color: #e1e8eb; cursor: not-allowed; }
+    &--tomada, &--tomada:disabled { background: #f3f6f7; color: #7b8d97; text-decoration: line-through; }
+    &--elegida { background: v.$noche; border-color: v.$noche; color: v.$blanco; }
+    &:focus-visible { outline: .3rem solid v.$naranja; outline-offset: .2rem; }
+}

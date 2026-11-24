@@ -32,7 +32,7 @@ function aplicar(doc, upd) {
     for (const [k, v] of Object.entries(upd.$pull || {})) { if (Array.isArray(doc[k])) doc[k] = doc[k].filter(x => x !== v) }
 }
 
-const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id', cotizaciones: 'codigo', ranchos_reservas: '_id' }
+const UNICOS = { ordenes: 'codigo', pagos_sinpe: 'comprobante', boletos: 'id', cotizaciones: 'codigo', ranchos_reservas: '_id', tenis_reservas: '_id' }
 
 export function crearDbFalsa() {
     const datos = {}

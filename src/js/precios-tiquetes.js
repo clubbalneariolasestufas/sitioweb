@@ -13,7 +13,22 @@ export const MAX_DIAS_ADELANTE = 90
 export const RANCHOS = [1, 2, 3, 4, 5, 6, 7]
 export const CAPACIDAD_RANCHO = 8
 export const PRECIO_RANCHO_FINDE = 10000    // sábado y domingo; entre semana se aparta sin costo
-export const MINUTOS_APARTADO = 15          // el rancho queda apartado mientras llega el pago
+export const MINUTOS_APARTADO = 15          // rancho y cancha quedan apartados mientras llega el pago
+
+// Cancha de tenis: se alquila por bloques de media hora, siempre junto con al menos una entrada
+export const PRECIO_TENIS_MEDIA_HORA = 1500 // ₡1 500 la media hora, ₡3 000 la hora
+export const TENIS_ABRE = 8 * 60            // minutos desde medianoche
+export const TENIS_CIERRA = 17 * 60
+export const TENIS_MAX_BLOQUES = 6          // hasta 3 horas por compra
+
+// Grupos: de 51 personas en adelante es un evento (solicitud que confirma la administración)
+export const GRUPO_DESDE = 51
+export const PRECIO_GRUPO = 3000
+
+export const hhmm = min => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
+export const duracionTexto = bloques => bloques === 1 ? '30 min' : bloques % 2 ? `${Math.floor(bloques / 2)} h 30 min` : `${bloques / 2} ${bloques === 2 ? 'hora' : 'horas'}`
+// Inicios de cada media hora que ocupa una reserva de cancha
+export const bloquesTenis = (inicio, bloques) => Array.from({ length: bloques }, (_, i) => inicio + i * 30)
 
 export function diaSemana(iso) {
     const [a, m, d] = iso.split('-').map(Number)
@@ -28,8 +43,15 @@ const entero = (v, max) => {
     return Number.isFinite(n) && n > 0 ? Math.min(n, max) : 0
 }
 
+function normalizarTenis(t) {
+    const inicio = Number(t?.inicio), bloques = Number(t?.bloques)
+    if (!Number.isInteger(bloques) || bloques < 1 || bloques > TENIS_MAX_BLOQUES || !Number.isInteger(inicio) || inicio % 30 || inicio < TENIS_ABRE || inicio + bloques * 30 > TENIS_CIERRA) return null
+    return { inicio, bloques, fin: inicio + bloques * 30 }
+}
+
 // Normaliza la selección y calcula el total. No valida disponibilidad (eso lo hace el servidor).
-export function calcularCompra({ general, menores, ranchos, fecha } = {}) {
+// tenis: { inicio: minutos desde medianoche (múltiplo de 30), bloques: medias horas }
+export function calcularCompra({ general, menores, ranchos, fecha, tenis } = {}) {
     const g = entero(general, MAX_PERSONAS)
     const m = entero(menores, MAX_PERSONAS)
     const lista = [...new Set((Array.isArray(ranchos) ? ranchos : []).map(Number).filter(n => RANCHOS.includes(n)))].sort((a, b) => a - b)
@@ -38,10 +60,12 @@ export function calcularCompra({ general, menores, ranchos, fecha } = {}) {
     if (g) lineas.push({ id: 'general', nombre: 'Entrada general', cantidad: g, precio: PRECIO_ENTRADA, monto: g * PRECIO_ENTRADA })
     if (m) lineas.push({ id: 'menor', nombre: `Menor de ${EDAD_GRATIS} años`, cantidad: m, precio: 0, monto: 0 })
     lista.forEach(n => lineas.push({ id: 'rancho', rancho: n, nombre: `Rancho ${n}`, cantidad: 1, precio: pRancho, monto: pRancho }))
+    const t = normalizarTenis(tenis)
+    if (t) lineas.push({ id: 'tenis', nombre: `Cancha de tenis ${hhmm(t.inicio)} a ${hhmm(t.fin)}`, cantidad: t.bloques, precio: PRECIO_TENIS_MEDIA_HORA, monto: t.bloques * PRECIO_TENIS_MEDIA_HORA })
     const total = lineas.reduce((s, l) => s + l.monto, 0)
     const personas = g + m
     return {
-        general: g, menores: m, personas, ranchos: lista, lineas, total,
+        general: g, menores: m, personas, ranchos: lista, tenis: t, lineas, total,
         precioRancho: pRancho,
         capacidad: lista.length * CAPACIDAD_RANCHO,
         caben: lista.length === 0 || personas <= lista.length * CAPACIDAD_RANCHO,
@@ -54,6 +78,7 @@ export function resumenCompra(c) {
     if (c.general) partes.push(`${c.general} entrada${c.general > 1 ? 's' : ''} general${c.general > 1 ? 'es' : ''}`)
     if (c.menores) partes.push(`${c.menores} menor${c.menores > 1 ? 'es' : ''} de ${EDAD_GRATIS} años`)
     if (c.ranchos?.length) partes.push(`rancho${c.ranchos.length > 1 ? 's' : ''} ${c.ranchos.join(' y ')}`)
+    if (c.tenis) partes.push(`tenis ${hhmm(c.tenis.inicio)} a ${hhmm(c.tenis.fin)}`)
     return partes.join(' + ')
 }
 

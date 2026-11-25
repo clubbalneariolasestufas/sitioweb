@@ -12,6 +12,34 @@ const hace = fecha => {
 }
 const item = (id, nombre, estado, detalle, queHacer = '') => ({ id, nombre, estado, detalle, queHacer })
 
+// Revisa las reglas de la cuenta de cada orden (ver cuenta.mjs) en los últimos 3 días:
+//   pagada  -> suma de pagos − total = sobrepago (nunca negativo)
+//   parcial -> 0 < suma de pagos < total
+//   y que ningún comprobante usado tenga un monto distinto al que reportó el banco.
+export async function cuadrePagos(db, ahora = new Date()) {
+    const desde = new Date(ahora.getTime() - 3 * 86400_000)
+    const pagos = db.collection('pagos_sinpe')
+    const errores = [], avisos = []
+    const conflictos = await pagos.countDocuments({ conflictoMonto: { $gt: 0 } })
+    if (conflictos) errores.push(`${conflictos} comprobante(s) que el banco reportó con un monto distinto al registrado`)
+    const ordenes = await db.collection('ordenes').find({ estado: { $in: ['pagada', 'parcial'] }, creadaEn: { $gte: desde } }).toArray()
+    for (const o of ordenes) {
+        const usados = await pagos.find({ ordenCodigo: o.codigo, estado: 'usado' }).toArray()
+        if (o.estado === 'pagada' && o.recibido == null) continue   // ventas anteriores a la cuenta por orden
+        const P = usados.reduce((s, p) => s + p.monto, 0)
+        const bien = o.estado === 'pagada' ? P - o.total === (o.sobrepago || 0) && P >= o.total : P > 0 && P < o.total
+        if (!bien) errores.push(`la compra ${o.codigo} no cuadra (recibido ₡${P}, total ₡${o.total})`)
+    }
+    const hoy = hoyCR(ahora)
+    const vencidas = (await db.collection('ordenes').find({ estado: 'parcial' }).toArray()).filter(o => o.fechaVisita < hoy).length
+    if (vencidas) avisos.push(`${vencidas} compra(s) con faltante que no se cobró el día de la visita`)
+    const sueltos = await pagos.countDocuments({ estado: 'libre', codigoOrden: { $regex: '^[A-Z0-9]{6}$' }, fecha: { $lt: new Date(ahora.getTime() - 40 * 60_000) } })
+    if (sueltos) avisos.push(`${sueltos} SINPE con código que no se pudo unir a su compra`)
+    if (errores.length) return item('cuadre', 'Cuadre de pagos', 'rojo', errores.join('; ') + '.', 'No entregue más boletos de esas compras y avise al técnico con el código de la compra.')
+    if (avisos.length) return item('cuadre', 'Cuadre de pagos', 'amarillo', avisos.join('; ') + '.', 'Busque la compra en el panel y revise los pagos con el cliente.')
+    return item('cuadre', 'Cuadre de pagos', 'verde', 'Lo cobrado en la web coincide con lo recibido.')
+}
+
 // Semáforo de conexiones: verde = funciona, amarillo = atención, rojo = no funciona, gris = sin configurar.
 // Los textos están pensados para personal sin conocimientos técnicos.
 export async function calcularEstado(db, { conLoyverse = true } = {}) {
@@ -74,6 +102,9 @@ export async function calcularEstado(db, { conLoyverse = true } = {}) {
     // 5. Avisos del banco que el sistema no entendió (últimas 24 horas)
     const raros = await db.collection('avisos_banco').countDocuments({ reconocido: false, en: { $gte: new Date(Date.now() - 86400_000) } })
     if (raros) items.push(item('avisos', 'Avisos del banco sin reconocer', 'amarillo', `${raros} mensaje(s) del banco que el sistema no entendió en las últimas 24 horas.`, 'Si un cliente dice que pagó y el sistema no lo ve, apruebe el pago a mano y avise al técnico.'))
+
+    // 6. Cuadre de pagos: lo cobrado en la web debe ser exactamente lo recibido
+    items.push(await cuadrePagos(db))
 
     const orden = ['verde', 'gris', 'amarillo', 'rojo']
     const global = items.reduce((peor, i) => (orden.indexOf(i.estado) > orden.indexOf(peor) ? i.estado : peor), 'verde')

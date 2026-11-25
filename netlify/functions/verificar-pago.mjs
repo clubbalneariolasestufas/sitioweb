@@ -1,14 +1,16 @@
 import { getDb } from './_lib/db.mjs'
 import { json, leerJson } from './_lib/http.mjs'
-import { MAX_INTENTOS, TOLERANCIA_PAGO_MIN } from './_lib/config.mjs'
+import { MAX_INTENTOS, TOLERANCIA_PAGO_MIN, sinpe as numeroSinpe } from './_lib/config.mjs'
+import { timingSafeEqual } from 'node:crypto'
 import { boletosConQr } from './_lib/boletos.mjs'
-import { completarPago } from './_lib/pagos.mjs'
+import { tomarPagos, evaluarOrden } from './_lib/cuenta.mjs'
+import { colones } from '../../src/js/precios-tiquetes.js'
 
-// POST /api/verificar-pago { codigo, ultimos4? }
-// Busca un pago SINPE libre (los escribe el lector de SMS/correo en la colección pagos_sinpe):
-//   1. Por el código de la orden que el cliente escribió en la descripción del SINPE, con el mismo monto.
-//      No pide nada más al cliente; el sitio consulta solo cada pocos segundos.
-//   2. Respaldo: mismo monto y mismos últimos 4 dígitos del comprobante (si no escribió el código).
+// POST /api/verificar-pago { codigo, ultimos4?, montoPagado? }
+// Une a la cuenta de la orden los SINPE que escribe el lector (colección pagos_sinpe) y responde el estado:
+//   1. Todo pago con el código de la orden en la descripción, sea cual sea el monto (pagos parciales se suman).
+//   2. Rescate sin código: últimos 4 dígitos del comprobante + el monto pagado (por defecto, el saldo).
+// Respuestas: esperando (404) · parcial (200, con saldo y boletos con saldo pendiente) · pagada (200).
 // Cada pago se consume una sola vez.
 export default async req => {
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
@@ -20,60 +22,66 @@ export default async req => {
 
     const db = await getDb()
     const ordenes = db.collection('ordenes')
-    const pagos = db.collection('pagos_sinpe')
 
     const orden = await ordenes.findOne({ codigo })
     if (!orden) return json({ error: 'Orden no encontrada' }, 404)
 
-    // Orden ya pagada: solo devuelve los boletos a quien conoce los mismos 4 dígitos
+    // ¿Es el dueño de la compra? (llave guardada en su celular o en el enlace de su correo)
+    const llave = String(d?.llave ?? '')
+    const esDueno = Boolean(orden.llave && llave.length === orden.llave.length && timingSafeEqual(Buffer.from(llave), Buffer.from(orden.llave)))
+
+    // Orden ya pagada: solo devuelve los boletos al dueño o a quien conoce los mismos 4 dígitos
+    if (orden.estado === 'pagada' && esDueno) return json({ codigo, boletos: await boletosConQr(orden), correoEnviado: false, ranchos: orden.ranchos || [], tenis: orden.tenis || null, credito: orden.credito || 0, total: orden.total, recibido: orden.recibido ?? orden.total, saldo: 0 })
     if (orden.estado === 'pagada') {
         if (!ultimos4) return json({ error: 'Su orden ya está pagada. Para ver sus boletos de nuevo escriba los últimos 4 dígitos del comprobante.', pagada: true }, 403)
-        if (orden.ultimos4Usado !== ultimos4) return json({ error: 'Los dígitos no coinciden con el pago de esta orden' }, 403)
+        const propios = (await db.collection('pagos_sinpe').find({ ordenCodigo: codigo, estado: 'usado' }).toArray()).map(p => p.ultimos4)
+        if (orden.ultimos4Usado !== ultimos4 && !propios.includes(ultimos4)) return json({ error: 'Los dígitos no coinciden con el pago de esta orden' }, 403)
         return json({ codigo, boletos: await boletosConQr(orden), correoEnviado: false, ranchos: orden.ranchos || [] })
     }
 
-    if (new Date(orden.venceEn) < new Date())
+    const sinpe = numeroSinpe()
+    const enCuenta = r => ({ total: r.total, recibido: r.recibido, saldo: r.saldo, sinpe })
+
+    if (orden.estado === 'pendiente' && new Date(orden.venceEn) < new Date())
         return json({ error: 'La orden venció. Si ya pagó, escríbanos por WhatsApp con su comprobante.' }, 410)
 
+    // 1. Todo SINPE que traiga el código de esta orden se une a su cuenta, sea cual sea el monto
     const desde = new Date(new Date(orden.creadaEn).getTime() - TOLERANCIA_PAGO_MIN * 60_000)
-    const reservar = filtro => pagos.findOneAndUpdate(
-        { estado: 'libre', monto: orden.total, fecha: { $gte: desde }, ...filtro },
-        { $set: { estado: 'reservado', ordenCodigo: codigo } },
-        { returnDocument: 'after' }
-    )
+    let nuevos = await tomarPagos(db, codigo, { codigoOrden: codigo, fecha: { $gte: desde } })
 
-    // 1. Por el código escrito en la descripción del SINPE (atómico: un pago no sirve para dos órdenes)
-    let pago = await reservar({ codigoOrden: codigo })
-
-    if (!pago) {
-        // Llegó un SINPE con este código pero por otro monto: no se entrega nada y se avisa
-        const otroMonto = await pagos.findOne({ estado: 'libre', codigoOrden: codigo, fecha: { $gte: desde } })
-        if (otroMonto) return json({
-            error: 'Recibimos un SINPE con su código, pero el monto no coincide con el de la orden. Escríbanos por WhatsApp con su comprobante.',
-            montoDistinto: true
-        }, 409)
-        if (!ultimos4) return json({ error: 'Todavía no vemos su pago.', esperando: true }, 404)
-
-        // 2. Respaldo por últimos 4 dígitos, con límite de intentos (evita adivinar dígitos por fuerza bruta)
+    // 2. Rescate sin código: últimos 4 dígitos del comprobante y el monto que pagó (por defecto, el saldo).
+    //    Los dos deben coincidir y hay límite de intentos, para que nadie reclame el pago de otra persona.
+    let r = await evaluarOrden(db, codigo)
+    if (!nuevos.length && ultimos4 && ['pendiente', 'parcial'].includes(r.tipo)) {
+        const montoPagado = d.montoPagado == null || d.montoPagado === '' ? r.saldo : Number(d.montoPagado)
+        if (!Number.isInteger(montoPagado) || montoPagado <= 0 || montoPagado > 10_000_000) return json({ error: 'Escriba el monto que pagó, sin puntos ni comas.' }, 400)
         const conteo = await ordenes.findOneAndUpdate(
-            { codigo, estado: 'pendiente', intentos: { $lt: MAX_INTENTOS } },
+            { codigo, estado: { $in: ['pendiente', 'parcial'] }, intentos: { $lt: MAX_INTENTOS } },
             { $inc: { intentos: 1 } },
             { returnDocument: 'after' }
         )
         if (!conteo) return json({ error: 'Demasiados intentos. Escríbanos por WhatsApp con su comprobante.' }, 429)
-        pago = await reservar({ ultimos4 })
-        if (!pago) return json({
-            error: 'Todavía no vemos su pago. Espere un minuto y vuelva a intentar; verifique el monto y los 4 dígitos.',
-            intentosRestantes: Math.max(0, MAX_INTENTOS - conteo.intentos)
+        nuevos = await tomarPagos(db, codigo, { ultimos4, monto: montoPagado, fecha: { $gte: desde } }, 1)
+        if (!nuevos.length) return json({
+            error: `Todavía no vemos un pago de ${colones(montoPagado)} con esos 4 números. Espere un minuto y vuelva a intentar.`,
+            intentosRestantes: Math.max(0, MAX_INTENTOS - conteo.intentos), ...enCuenta(r)
         }, 404)
+        r = await evaluarOrden(db, codigo)
     }
 
-    const cierre = await completarPago(db, codigo, { comprobante: pago.comprobante, ultimos4: pago.ultimos4 })
-    if (!cierre) {
-        await pagos.updateOne({ comprobante: pago.comprobante }, { $set: { estado: 'libre' }, $unset: { ordenCodigo: '' } })
-        return json({ error: 'La orden cambió de estado. Intente de nuevo.' }, 409)
-    }
-    return json({ codigo, boletos: cierre.boletos, correoEnviado: cierre.correoEnviado, ranchos: cierre.orden.ranchos || [], tenis: cierre.orden.tenis || null, ranchoConflicto: cierre.ranchoConflicto, tenisConflicto: cierre.tenisConflicto })
+    if (r.tipo === 'pendiente') return json({ error: 'Todavía no vemos su pago.', esperando: true, ...enCuenta(r) }, 404)
+    if (r.tipo === 'parcial') return json({
+        codigo, parcial: true, mensaje: r.mensaje, pista: r.pista, ...enCuenta(r),
+        boletos: esDueno ? r.boletos : null, reservasGarantizadas: r.reservas.garantizadas, faltaParaGarantizar: r.reservas.faltaParaGarantizar || 0,
+        ranchos: r.orden.ranchos || [], tenis: r.orden.tenis || null
+    })
+    if (r.tipo !== 'pagada') return json({ error: 'La orden no se puede pagar.' }, 409)
+    if (r.yaEstaba && !esDueno && !ultimos4) return json({ error: 'Su compra ya está pagada completa. Para ver sus boletos escriba los últimos 4 números del comprobante.', pagada: true }, 403)
+    if (r.yaEstaba) return json({ codigo, boletos: await boletosConQr(r.orden), correoEnviado: false, ranchos: r.orden.ranchos || [], tenis: r.orden.tenis || null, sobrepago: r.sobrepago, credito: r.credito, ...enCuenta(r) })
+    return json({
+        codigo, boletos: r.boletos, correoEnviado: r.correoEnviado, ranchos: r.orden.ranchos || [], tenis: r.orden.tenis || null,
+        ranchoConflicto: r.ranchoConflicto, tenisConflicto: r.tenisConflicto, sobrepago: r.sobrepago, credito: r.credito, ...enCuenta(r)
+    })
 }
 
 export const config = { path: '/api/verificar-pago' }

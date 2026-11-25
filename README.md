@@ -117,6 +117,27 @@ permiten contraseñas de aplicación y se necesita OAuth.
 | `GET /api/calendario.ics?k=` | Administración | Calendario privado para suscribirse desde Google Calendar: eventos y tareas del personal. |
 | `tareas-programadas` | Automática | Cada 30 minutos reenvía a Loyverse lo pendiente, vence solicitudes y cotizaciones, manda el resumen diario de eventos y avisa si algo está en rojo. |
 
+## Pagos parciales: la cuenta de cada orden (Propuesta A)
+
+Regla: **lo que se cobra en la web es exactamente lo que se recibe.** Montos en colones enteros.
+
+- **Cuenta:** D = total, P = suma de los pagos unidos a la orden (colección `pagos_sinpe`, `estado: 'usado'`, `ordenCodigo`), S = D − P. Estados: `pendiente` (P = 0), `parcial` (0 < P < D), `pagada` (P ≥ D). P siempre se calcula desde los pagos, nunca se suma a mano (`netlify/functions/_lib/cuenta.mjs`).
+- **SINPE con el código y otro monto:** se une a la orden igual. El cliente ve en 15–45 s «Recibimos ₡1 750 de ₡17 500. Faltan ₡15 750», con pista si faltó un cero o se invirtieron números. Puede hacer otro SINPE por el faltante (se suma solo) o pagar en la entrada.
+- **Faltante en la entrada:** solo el día de la visita. El escáner muestra «COBRAR ₡X» y no deja pasar; en el panel se marca «Cobré» (efectivo o SINPE, monto exacto del faltante) y la orden queda pagada.
+- **Rancho y cancha:** quedan firmes si lo pagado cubre esos complementos; si no, el apartado se alarga una vez 30 minutos.
+- **Sobrepago:** si pasa de ₡1 000 se entrega como crédito el día de la visita (botón en el panel, una sola vez); si es de ₡1 000 o menos no se devuelve.
+- **Rescate sin código:** últimos 4 números del comprobante + monto pagado.
+- **Llave de la compra:** los códigos QR solo se entregan al celular que compró o por el enlace del correo (`tiquetes.html?orden=CODIGO&llave=...`). Con solo el código se ven montos, no QR.
+- **Aprobación manual:** exige el monto exacto del comprobante; si el lector ya registró ese comprobante con otro monto, se rechaza.
+- **Correo programado** (cada 30 min, `tareas-programadas.mjs`): une los SINPE con código aunque el cliente cerró la página; avisa el faltante 10 min después del pago parcial y lo recuerda la víspera (desde las 16:00) o la mañana de la visita.
+- **Loyverse:** un solo recibo cuando la cuenta se completa, con las formas de pago reales (SINPE web y efectivo). Variable opcional `LOYVERSE_PAYMENT_TYPE_EFECTIVO`.
+- **Cuadre de pagos** en el semáforo del panel: rojo si alguna compra no cuadra o si el banco reportó otro monto para un comprobante ya usado (el lector marca `conflictoMonto`); amarillo si quedó un faltante sin cobrar o un SINPE con código suelto.
+- **Probar en local:** `curl -X POST "http://localhost:8888/__simular-pago?codigo=CODIGO&monto=1750"`.
+
+## Área techada para eventos
+
+₡50 000 hasta 40 personas; desde la persona 41, ₡1 000 más por persona (41 = ₡51 000). Incluye mesas y sillas hasta 100 personas; más de 100 se coordina con la administración (la solicitud queda «por cotizar»). Las personas incluyen a los menores.
+
 ## Taquilla y reservaciones en la página principal (Fusión B)
 
 - Una sola sección (`#tiquetes`, con `#reservas` apuntando al bloque de eventos): día, personas, rancho, cancha de tenis y evento, con el total en un boleto a la derecha. Código en `src/js/taquilla.js`, estilos en `layout/_taquilla.scss`.

@@ -3,11 +3,15 @@ import { calcularEstado } from './_lib/estado.mjs'
 import { reintentarPendientes } from './_lib/loyverse.mjs'
 import { enviarAlerta } from './_lib/correo.mjs'
 import { vencerCotizaciones, resumenDiario } from './_lib/cotizaciones.mjs'
+import { aplicarPagosConCodigo, avisarSaldos } from './_lib/cuenta.mjs'
 
-// Cada 30 minutos: envía a Loyverse las ventas pendientes y avisa por correo si algo está en rojo
-// (como máximo un correo cada 6 horas).
+// Cada 30 minutos: une a su orden los SINPE con código aunque el cliente haya cerrado la página,
+// avisa por correo los faltantes de pagos parciales, envía a Loyverse las ventas pendientes
+// y avisa por correo si algo está en rojo (como máximo un correo cada 6 horas).
 export default async () => {
     const db = await getDb()
+    await aplicarPagosConCodigo(db)
+    await avisarSaldos(db)
     await reintentarPendientes(db, 20)
     await vencerCotizaciones(db)
     await resumenDiario(db)

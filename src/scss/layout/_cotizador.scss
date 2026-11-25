@@ -289,3 +289,14 @@ $alto-barra: 9.6rem;
     &--elegida { background: v.$noche; border-color: v.$noche; color: v.$blanco; }
     &:focus-visible { outline: .3rem solid v.$naranja; outline-offset: .2rem; }
 }
+
+// Pago incompleto (cuenta de la orden con saldo)
+.tq-parcial {
+    display: grid; gap: .6rem; padding: 1.4rem 1.6rem; border-radius: 1.4rem;
+    background: #fff4dd; border: .2rem solid v.$naranja; color: #4a3610; font-size: 1.4rem; line-height: 1.45;
+    strong { font-size: 1.8rem; font-weight: 900; color: v.$noche; }
+    &__pista { font-weight: 800; color: #8a4b00; }
+    &__nota { font-weight: 700; }
+    .boton { justify-self: start; margin-top: .4rem; }
+}
+.tq-aviso--alerta { background: #fff4dd; color: #4a3610; border: .15rem solid v.$naranja; }

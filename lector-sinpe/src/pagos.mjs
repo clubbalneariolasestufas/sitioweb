@@ -29,8 +29,10 @@ export async function registrarPago(db, { comprobante, monto, fecha, fuente, des
     // Ya existía: llegó la segunda fuente (o un aviso repetido)
     const previo = await pagos.findOneAndUpdate({ comprobante: nuevo.comprobante }, { $addToSet: { fuentes: fuente } }, { returnDocument: 'after' })
     if (previo.monto !== monto) {
-        // Mismo comprobante con otro monto: nunca debe aprobarse solo
+        // Mismo comprobante con otro monto: nunca debe aprobarse solo. Si ya se usó (por ejemplo,
+        // registrado a mano con otro monto), se marca para que el cuadre de pagos del panel lo muestre en rojo.
         await pagos.updateOne({ comprobante: nuevo.comprobante, estado: { $in: ['libre', 'por_confirmar'] } }, { $set: { estado: 'conflicto' } })
+        await pagos.updateOne({ comprobante: nuevo.comprobante }, { $set: { conflictoMonto: monto } })
         return { resultado: 'conflicto', estado: 'conflicto' }
     }
     if (previo.estado === 'por_confirmar' && previo.fuentes.length >= fuentesMinimas) {

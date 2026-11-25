@@ -26,7 +26,8 @@ http.createServer(async (req, res) => {
     // Solo local: simula que el lector recibió el SINPE de una orden (POST /__simular-pago?codigo=XXXXXX)
     if (u.pathname === '/__simular-pago') {
         const o = (await db.collection('ordenes').find({ codigo: u.searchParams.get('codigo') }).toArray())[0]
-        if (o) db.collection('pagos_sinpe').filas.push({ comprobante: 'SIM-' + Date.now(), ultimos4: '4821', monto: o.total, fecha: new Date(), estado: 'libre', codigoOrden: o.codigo })
+        // ?monto= simula un pago distinto al total (por ejemplo, un cero de menos)
+        if (o) db.collection('pagos_sinpe').filas.push({ comprobante: 'SIM-' + Date.now(), ultimos4: '4821', monto: Number(u.searchParams.get('monto')) || o.total, fecha: new Date(), estado: 'libre', codigoOrden: o.codigo })
         res.writeHead(o ? 200 : 404); res.end(o ? 'ok' : 'no'); return
     }
     const h = rutas[u.pathname]

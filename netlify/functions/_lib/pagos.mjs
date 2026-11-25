@@ -4,12 +4,13 @@ import { loyverseConfigurado, sincronizarOrden } from './loyverse.mjs'
 import { apartarRanchos } from './ranchos.mjs'
 import { apartarTenis } from './tenis.mjs'
 
-// Cierra una venta: marca la orden como pagada, consume el pago, crea los boletos,
-// envía el correo y registra el recibo en Loyverse. Devuelve null si la orden ya no estaba pendiente.
+// Cierra una venta cuando la cuenta de la orden ya está cubierta (ver cuenta.mjs): marca la orden como pagada,
+// confirma rancho y cancha, crea los boletos, envía el correo y registra el recibo en Loyverse.
+// Devuelve null si la orden ya no estaba pendiente ni parcial.
 export async function completarPago(db, codigo, pago, extra = {}) {
     const ordenes = db.collection('ordenes')
     const pagada = await ordenes.findOneAndUpdate(
-        { codigo, estado: 'pendiente' },
+        { codigo, estado: { $in: ['pendiente', 'parcial'] } },
         { $set: {
             estado: 'pagada', pagadaEn: new Date(),
             comprobante: pago.comprobante, ultimos4Usado: pago.ultimos4,
@@ -19,7 +20,6 @@ export async function completarPago(db, codigo, pago, extra = {}) {
         { returnDocument: 'after' }
     )
     if (!pagada) return null
-    await db.collection('pagos_sinpe').updateOne({ comprobante: pago.comprobante }, { $set: { estado: 'usado', usadoEn: new Date(), ordenCodigo: codigo } })
 
     // Ranchos: el apartado se vuelve firme. Si el pago llegó después de que el apartado venció
     // y otra persona tomó el rancho, la venta sigue y se marca para que el personal le ofrezca otro.

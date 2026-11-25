@@ -114,6 +114,14 @@
         <!-- 5 · Pago -->
         <section class="cot-paso" data-paso="5" data-titulo="Haga su SINPE en tres toques" hidden>
             <p class="cot-paso__ayuda">Toque «Copiar», péguelo en la app de su banco y siga con el siguiente. «Ya pagué» se activa al completar los tres.</p>
+            <div class="tq-parcial" id="pago-parcial" hidden role="status" aria-live="polite">
+                <strong id="parcial-titulo"></strong>
+                <span id="parcial-detalle"></span>
+                <span class="tq-parcial__pista" id="parcial-pista" hidden></span>
+                <span class="tq-parcial__nota" id="parcial-reservas" hidden></span>
+                <span>Haga otro SINPE por el faltante con el mismo código (los datos de abajo ya están actualizados), o páguelo en la entrada el día de su visita.</span>
+                <button type="button" class="boton boton--linea" id="pagar-en-entrada">Pagar el faltante en la entrada</button>
+            </div>
             <div class="tq-copias" id="copias"></div>
             <div class="tq-banco" aria-hidden="true">
                 <div class="tq-banco__titulo">ASÍ SE VE EN LA APP DE SU BANCO</div>
@@ -129,6 +137,10 @@
                 <label class="formulario__etiqueta" for="ultimos4">Últimos 4 números del comprobante (opcional)</label>
                 <input class="formulario__control" id="ultimos4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" placeholder="Ej. 4821">
                 <p class="formulario__nota">Si la descripción quedó vacía, con esto encontramos su pago.</p>
+            </div>
+            <div class="formulario__campo">
+                <label class="formulario__etiqueta" for="monto-pagado">Monto que pagó, si fue distinto (opcional)</label>
+                <input class="formulario__control" id="monto-pagado" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Ej. 1750">
             </div>
             <p class="tq-aviso tq-aviso--error" id="pago-error" hidden role="alert"></p>
             <button type="button" class="tq-enlace" id="cancelar-orden">Cambiar la compra (empezar de nuevo)</button>

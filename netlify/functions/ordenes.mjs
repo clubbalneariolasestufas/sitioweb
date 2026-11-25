@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomBytes } from 'node:crypto'
 import { getDb } from './_lib/db.mjs'
 import { json, leerJson, ipDe, limpiar } from './_lib/http.mjs'
 import { MAX_PERSONAS, MAX_DIAS_ADELANTE, ORDEN_VENCE_MIN, MAX_ORDENES_POR_HORA, sinpe } from './_lib/config.mjs'
@@ -65,6 +65,9 @@ export default async (req, context) => {
         fechaVisita: fecha,
         nombre, telefono, correo,
         huella: h, intentos: 0,
+        // Llave privada de la compra: solo la tienen el celular que compró y el enlace del correo.
+        // Sin ella, el código de 6 letras deja ver montos pero nunca los códigos QR.
+        llave: randomBytes(12).toString('base64url'),
         creadaEn: ahora,
         venceEn: new Date(ahora.getTime() + ORDEN_VENCE_MIN * 60_000)
     }
@@ -100,6 +103,7 @@ export default async (req, context) => {
         return json({
             codigo: orden.codigo,
             total: orden.total,
+            llave: orden.llave,
             resumen: orden.nombrePase,
             sinpe: sinpe(),
             venceEn: orden.venceEn.toISOString(),

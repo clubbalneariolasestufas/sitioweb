@@ -228,11 +228,13 @@ function pintarCarrito() {
 $('#ir-rancho').addEventListener('click', () => irPaso(3))
 
 /* ---------- Paso 5: pago asistido ---------- */
+const porPagar = o => (o.recibido > 0 ? o.saldo : o.total)
 function pintarCopias() {
     const o = estado.orden
+    const monto = porPagar(o)
     const datos = [
         { id: 'num', etiqueta: '1 · Número SINPE', valor: o.sinpe, copia: o.sinpe.replace(/\D/g, ''), nota: 'Club Balneario Las Estufas' },
-        { id: 'monto', etiqueta: '2 · Monto exacto', valor: colones(o.total), copia: String(o.total), nota: 'Sin redondear' },
+        { id: 'monto', etiqueta: o.recibido > 0 ? '2 · Monto exacto que falta' : '2 · Monto exacto', valor: colones(monto), copia: String(monto), nota: o.recibido > 0 ? `Ya recibimos ${colones(o.recibido)} de ${colones(o.total)}` : 'Sin redondear' },
         { id: 'cod', etiqueta: '3 · Descripción', valor: o.codigo, copia: o.codigo, nota: 'Péguelo en «Descripción» o «Detalle»' }
     ]
     const caja = $('#copias'); caja.replaceChildren()
@@ -251,7 +253,7 @@ function pintarCopias() {
         caja.append(f)
     })
     $('#banco-numero').textContent = o.sinpe.replace('-', ' ')
-    $('#banco-monto').textContent = Number(o.total).toLocaleString('es-CR')
+    $('#banco-monto').textContent = Number(monto).toLocaleString('es-CR')
     $('#banco-codigo').textContent = o.codigo
 }
 
@@ -285,7 +287,9 @@ function vigilarPago() {
         if (document.hidden) return
         try {
             const { ok, datos } = await consultarPago('')
-            if (ok) entregar(datos)
+            if (ok && datos.parcial) mostrarParcial(datos)
+            else if (ok) entregar(datos)
+            else if (datos.pagada) { clearInterval(vigia); $('#pago-parcial').hidden = true; mostrarError('#pago-error', 'Su compra quedó pagada completa. Escriba los últimos 4 números del comprobante y toque «Ya pagué» para ver sus boletos (también le llegan al correo).') }
             else if (!datos.esperando) { clearInterval(vigia); mostrarError('#pago-error', datos.error || 'No se pudo verificar el pago.') }
         } catch {}
     }, 15_000)
@@ -300,15 +304,40 @@ function vigilarPago() {
     pintarReloj()
     reloj = setInterval(pintarReloj, 1000)
 }
-async function consultarPago(ultimos4) {
-    const r = await fetch(CONFIG.api.verificar, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: estado.orden.codigo, ultimos4 }) })
+async function consultarPago(ultimos4, montoPagado) {
+    const r = await fetch(CONFIG.api.verificar, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: estado.orden.codigo, llave: estado.orden.llave || '', ultimos4, ...(montoPagado ? { montoPagado } : {}) }) })
     return { ok: r.ok, datos: await r.json().catch(() => ({})) }
 }
+
+// Pago incompleto: se avisa de inmediato cuánto llegó y cuánto falta; la página sigue esperando el resto
+function mostrarParcial(datos) {
+    const o = estado.orden
+    const cambio = o.recibido !== datos.recibido
+    Object.assign(o, { recibido: datos.recibido, saldo: datos.saldo, total: datos.total, boletosConSaldo: datos.boletos })
+    if (cambio) estado.copiados = estado.copiados.filter(x => x !== 'monto')   // hay que copiar el nuevo monto
+    memoria.set('ordenTiquetes', { orden: o, fecha: estado.fecha })
+    $('#pago-parcial').hidden = false
+    $('#parcial-titulo').textContent = `Recibimos ${colones(datos.recibido)} de ${colones(datos.total)}. Faltan ${colones(datos.saldo)}.`
+    $('#parcial-detalle').textContent = 'Su compra quedó guardada con el pago parcial. Todavía no puede ingresar con estos boletos.'
+    $('#parcial-pista').hidden = !datos.pista
+    $('#parcial-pista').textContent = datos.pista || ''
+    $('#parcial-reservas').hidden = datos.reservasGarantizadas !== false
+    $('#parcial-reservas').textContent = datos.faltaParaGarantizar ? `Su rancho o cancha queda garantizado cuando pague ${colones(datos.faltaParaGarantizar)} más.` : ''
+    $('#pago-error').hidden = true
+    $('#cancelar-orden').hidden = true   // con dinero recibido, la compra ya no se descarta desde aquí
+    // Sin la llave de la compra (otro celular sin el enlace del correo) no hay QR: se presenta el código en la entrada
+    $('#pagar-en-entrada').textContent = datos.boletos ? 'Pagar el faltante en la entrada' : `Pagar en la entrada: presente el código ${o.codigo}`
+    if (estado.paso !== 5) irPaso(5)
+    pintarCopias(); actualizar()
+}
+$('#pagar-en-entrada').addEventListener('click', () => {
+    const o = estado.orden
+    entregar({ codigo: o.codigo, boletos: o.boletosConSaldo || [], saldo: o.saldo, recibido: o.recibido, total: o.total, conSaldo: true })
+})
 function mostrarError(sel, texto) { const e = $(sel); e.textContent = texto; e.hidden = false }
 
 function entregar(datos) {
-    clearInterval(vigia); clearInterval(reloj)
-    memoria.set('ordenTiquetes', null)
+    if (!datos.conSaldo) { clearInterval(vigia); clearInterval(reloj); memoria.set('ordenTiquetes', null) }
     const lista = $('#boletos-lista'); lista.replaceChildren()
     datos.boletos.forEach((b, i) => {
         const fig = el('figure', 'boleto')
@@ -322,10 +351,14 @@ function entregar(datos) {
         fig.append(img, cap)
         lista.append(fig)
     })
-    $('#listo-texto').textContent = `Pago confirmado. Presente cada código QR en la entrada (guarde una captura).${datos.ranchos?.length ? ` Su rancho: ${datos.ranchos.join(' y ')}.` : ''}${datos.tenis ? ` Cancha de tenis de ${hhmm(datos.tenis.inicio)} a ${hhmm(datos.tenis.fin)}.` : ''}`
+    $('#listo-texto').textContent = datos.conSaldo
+        ? `Faltan ${colones(datos.saldo)}: páguelos en la entrada el día de su visita, en efectivo o por SINPE. Si hace otro SINPE con el código ${datos.codigo}, sus boletos quedan completos solos. ${datos.boletos.length ? 'Guarde estos códigos QR.' : `En la entrada diga el código ${datos.codigo} o su número de teléfono.`}`
+        : `Pago confirmado. Presente cada código QR en la entrada (guarde una captura).${datos.ranchos?.length ? ` Su rancho: ${datos.ranchos.join(' y ')}.` : ''}${datos.tenis ? ` Cancha de tenis de ${hhmm(datos.tenis.inicio)} a ${hhmm(datos.tenis.fin)}.` : ''}`
     const conflictos = []
     if (datos.ranchoConflicto) conflictos.push(`Su pago llegó después de que se liberó el rancho ${datos.ranchoConflicto} y otra persona lo tomó. Al llegar, el personal le asigna otro rancho libre; si no hay, le devolvemos ese monto.`)
     if (datos.tenisConflicto) conflictos.push(`Su pago llegó después de que se liberó la cancha y otra persona la tomó a las ${datos.tenisConflicto}. Al llegar, el personal le ofrece otra hora libre o le devuelve lo de la cancha.`)
+    if (datos.credito) conflictos.push(`Pagó ${colones(datos.credito)} de más: se le entrega como crédito el día de su visita, en la entrada.`)
+    $('#listo-texto').className = 'tq-aviso ' + (datos.conSaldo ? 'tq-aviso--alerta' : 'tq-aviso--ok')
     $('#listo-conflicto').hidden = !conflictos.length
     $('#listo-conflicto').textContent = conflictos.join(' ')
     $('#listo-correo').hidden = !datos.correoEnviado
@@ -360,8 +393,9 @@ function validarPaso(p) {
 
 function actualizar() {
     const c = compra()
-    $('#barra-total').textContent = colones(estado.orden ? estado.orden.total : c.total)
+    $('#barra-total').textContent = colones(estado.orden ? porPagar(estado.orden) : c.total)
     $('#barra-resumen').textContent = estado.fecha ? `${c.personas} persona${c.personas === 1 ? '' : 's'}${c.ranchos.length ? ' · ' + c.ranchos.length + ' rancho' + (c.ranchos.length > 1 ? 's' : '') : ''}${c.tenis ? ' · tenis' : ''} · ${fechaLarga(estado.fecha)}` : `Entrada general ${colones(PRECIO_ENTRADA)}`
+    if (estado.orden?.recibido > 0) $('#barra-resumen').textContent = `Falta por pagar · compra ${estado.orden.codigo}`
     if (estado.paso === 3) avisoRanchos()
     const falta = validarPaso(estado.paso)
     const btn = $('#btn-siguiente')
@@ -427,8 +461,10 @@ $('#btn-siguiente').addEventListener('click', async () => {
         btn.disabled = true; btn.textContent = 'Buscando su pago…'
         $('#pago-error').hidden = true
         try {
-            const { ok, datos } = await consultarPago($('#ultimos4').value.replace(/\D/g, '').slice(0, 4))
-            if (ok) entregar(datos)
+            const montoPagado = Number($('#monto-pagado').value.replace(/\D/g, '')) || 0
+            const { ok, datos } = await consultarPago($('#ultimos4').value.replace(/\D/g, '').slice(0, 4), montoPagado)
+            if (ok && datos.parcial) mostrarParcial(datos)
+            else if (ok) entregar(datos)
             else mostrarError('#pago-error', datos.esperando
                 ? 'Todavía no vemos su pago. Normalmente llega en menos de un minuto; deje esta pantalla abierta. Si no escribió el código, ponga los últimos 4 números del comprobante.'
                 : datos.error || 'No se pudo verificar el pago.')
@@ -444,14 +480,35 @@ $('#cambiar-fecha').addEventListener('click', () => irPaso(1))
 
 /* ---------- Inicio ---------- */
 const guardada = memoria.get('ordenTiquetes')
-if (guardada?.orden && new Date(guardada.orden.venceEn) > new Date()) {
+const rescate = new URLSearchParams(location.search).get('orden')
+if (rescate && /^[A-Za-z0-9]{6}$/.test(rescate)) {
+    // Rescate de compra (enlace del correo o de WhatsApp): retoma la orden desde cualquier celular
+    const q = new URLSearchParams(location.search)
+    const llave = q.get('llave') || (guardada?.orden?.codigo === rescate.toUpperCase() ? guardada.orden.llave : '') || ''
+    rescatar(rescate.toUpperCase(), llave)
+} else if (guardada?.orden && (new Date(guardada.orden.venceEn) > new Date() || guardada.orden.recibido > 0)) {
     // Volvió a la página con una orden sin pagar: se retoma el paso de pago
     estado.orden = guardada.orden; estado.fecha = guardada.fecha; estado.copiados = ['num', 'monto', 'cod']
-    irPaso(5)
-    vigilarPago()
+    if (guardada.orden.recibido > 0) rescatar(guardada.orden.codigo, guardada.orden.llave)
+    else { irPaso(5); vigilarPago() }
 } else {
     memoria.set('ordenTiquetes', null)
     irPaso(desdeInicio())
+}
+
+async function rescatar(codigo, llave = '') {
+    estado.orden = { codigo, llave, total: 0, recibido: 0, saldo: 0, sinpe: CONFIG.sinpe, venceEn: new Date(Date.now() + 86400000).toISOString() }
+    estado.copiados = ['num', 'monto', 'cod']
+    irPaso(5)
+    try {
+        const { ok, datos } = await consultarPago('')
+        if (datos.sinpe) estado.orden.sinpe = datos.sinpe
+        if (ok && datos.parcial) { mostrarParcial(datos); vigilarPago() }
+        else if (ok) entregar(datos)
+        else if (datos.esperando) { Object.assign(estado.orden, { total: datos.total, saldo: datos.saldo }); pintarCopias(); actualizar(); vigilarPago() }
+        else if (datos.pagada) { pintarCopias(); mostrarError('#pago-error', 'Su compra ya está pagada. Escriba los últimos 4 números del comprobante y toque «Ya pagué» para ver sus boletos.') }
+        else { estado.orden = null; memoria.set('ordenTiquetes', null); irPaso(1); mostrarError('#dia-nota', datos.error || 'No encontramos esa compra.') }
+    } catch { mostrarError('#pago-error', 'Sin conexión. Intente de nuevo en un momento.') }
 }
 
 // Selección armada en la página principal: tiquetes.html?f=2026-12-05&g=2&m=1&r=1&tb=2&ti=540

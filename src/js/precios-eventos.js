@@ -17,7 +17,9 @@ export const ENTRADAS = [
 // exclusivo: el área se reserva para un solo grupo por día (bloquea la fecha para otros)
 // porCotizar: se registra en la solicitud y la administración pone el monto
 export const AREAS = [
-    { id: 'techada', nombre: 'Área techada para eventos', detalle: 'Exclusiva para el grupo', precio: 0, exclusivo: true, porCotizar: true },
+    // ₡50 000 hasta 40 personas; desde la persona 41, ₡1 000 más por persona (41 = ₡51 000).
+    // Se entrega con mesas y sillas hasta 100 personas; grupos mayores se coordinan con la administración.
+    { id: 'techada', nombre: 'Área techada para eventos', detalle: 'Con mesas y sillas hasta 100 personas · ₡50 000 hasta 40 personas, ₡1 000 más por persona adicional', precio: 50000, exclusivo: true, porPersonas: { incluye: 40, adicional: 1000, capacidad: 100 } },
     { id: 'ranchos', nombre: 'Ranchos de bambú', detalle: 'Hasta 8 personas cada uno', precio: 0, porRancho: true },
     { id: 'tenis', nombre: 'Cancha de tenis', detalle: '₡3 000 la hora', precio: PRECIO_TENIS_MEDIA_HORA * 2, porHora: true }
 ]
@@ -77,7 +79,7 @@ export function calcular(selCruda, fecha = null) {
     const sel = normalizar(selCruda)
     const n = totalPersonas(sel.personas)
     const lineas = []
-    let entradas = 0, areas = 0, alimentacion = 0, extras = 0, porCotizar = false
+    let entradas = 0, areas = 0, alimentacion = 0, extras = 0, porCotizar = false, coordinar = false
     const grupo = (sel.personas.adultos || 0) >= REGLAS.grupoDesde
 
     for (const e of ENTRADAS) {
@@ -90,6 +92,18 @@ export function calcular(selCruda, fecha = null) {
     }
     for (const id of sel.areas) {
         const a = _areas[id]
+        if (a.porPersonas && n > a.porPersonas.capacidad) {
+            porCotizar = true; coordinar = true
+            lineas.push({ grupo: 'Áreas', concepto: `${a.nombre} (más de ${a.porPersonas.capacidad} personas: se coordina con la administración)`, cantidad: 1, precio: 0, monto: 0, porCotizar: true })
+            continue
+        }
+        if (a.porPersonas) {
+            const extra = Math.max(0, n - a.porPersonas.incluye)
+            const monto = a.precio + extra * a.porPersonas.adicional
+            areas += monto
+            lineas.push({ grupo: 'Áreas', concepto: a.nombre + (extra ? ` (${n} personas: ${extra} sobre ${a.porPersonas.incluye})` : ''), cantidad: 1, precio: monto, monto })
+            continue
+        }
         if (a.porCotizar) { porCotizar = true; lineas.push({ grupo: 'Áreas', concepto: a.nombre + ' (por cotizar)', cantidad: 1, precio: 0, monto: 0, porCotizar: true }); continue }
         const cantidad = a.porHora ? sel.horasTenis : a.porRancho ? sel.ranchos : 1
         const precio = a.porRancho ? (fecha ? precioRancho(fecha) : 0) : a.precio
@@ -120,7 +134,7 @@ export function calcular(selCruda, fecha = null) {
         entradas, areas, alimentacion, extras, subtotal, servicio, iva, total, adelanto,
         saldo: total - adelanto,
         revisionManual: n > REGLAS.maxPersonas,
-        grupo, porCotizar,
+        grupo, porCotizar, coordinar,
         preciosDeEjemplo: PRECIOS_DE_EJEMPLO
     }
 }

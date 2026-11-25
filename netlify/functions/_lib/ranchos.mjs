@@ -27,9 +27,9 @@ const tomarUno = (col, fecha, n, orden, hasta, firme, ahora) => tomarCupo(col, i
 export const LEJOS_2100 = LEJOS
 
 // Aparta (o confirma, con firme=true) varios ranchos para una orden. Todo o nada.
-export async function apartarRanchos(db, { fecha, ranchos, orden, firme = false, ahora = new Date() }) {
+export async function apartarRanchos(db, { fecha, ranchos, orden, firme = false, minutos = MINUTOS_APARTADO, ahora = new Date() }) {
     const col = db.collection(COL)
-    const hasta = firme ? LEJOS : new Date(ahora.getTime() + MINUTOS_APARTADO * 60_000)
+    const hasta = firme ? LEJOS : new Date(ahora.getTime() + minutos * 60_000)
     const tomados = []
     for (const n of ranchos) {
         const r = await tomarUno(col, fecha, n, orden, hasta, firme, ahora)

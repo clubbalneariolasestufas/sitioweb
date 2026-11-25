@@ -25,6 +25,7 @@ const primerDia = () => (horaCR() >= HORARIO.cierra ? sumar(hoyIso(), 1) : hoyIs
 
 const SERVICIOS = [['comida', 'Comida del restaurante'], ['dj', 'DJ'], ['musica', 'Música y sonido']]
 const ESPACIOS = [['techada', 'Área techada para eventos'], ['ambos', 'Área techada y ranchos'], ['ranchos', 'Solo ranchos libres']]
+const usaTechada = () => e.espacio !== 'ranchos'
 
 const e = {
     fecha: '', general: 2, menores: 0, ranchos: 0, tenis: 0, inicio: null,
@@ -200,6 +201,10 @@ function pintar() {
     sw.setAttribute('aria-pressed', String(ev))
     sw.textContent = grupo() ? `Sí, grupo de más de ${GRUPO_DESDE - 1}` : e.evento ? 'Sí, es un evento' : 'No, solo pasear'
     $('#tq-evento-detalle').hidden = !ev
+    $('#tq-techada-nota').hidden = !ev || !usaTechada()
+    $('#tq-techada-nota').textContent = personas > 100
+        ? 'Más de 100 personas: el área techada se coordina con la administración (mesas, sillas y precio).'
+        : `Área techada con mesas y sillas para ${personas} personas: ${colones(50000 + Math.max(0, personas - 40) * 1000)}. Incluye hasta 40 personas por ₡50 000 y ₡1 000 más por cada persona adicional, hasta 100.`
     if (ev) {
         chips($('#tq-tipos'), TIPOS_EVENTO.map(t => [t, t]), id => e.tipo === id, id => { e.tipo = id })
         chips($('#tq-servicios'), SERVICIOS, id => e.servicios.includes(id), id => { e.servicios = e.servicios.includes(id) ? e.servicios.filter(x => x !== id) : [...e.servicios, id] })

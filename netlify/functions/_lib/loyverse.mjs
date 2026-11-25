@@ -6,7 +6,9 @@ const BASE = 'https://api.loyverse.com/v1.0'
 const env = () => ({
     token: process.env.LOYVERSE_TOKEN,
     tienda: process.env.LOYVERSE_STORE_ID,
-    tipoPago: process.env.LOYVERSE_PAYMENT_TYPE_ID
+    tipoPago: process.env.LOYVERSE_PAYMENT_TYPE_ID,
+    // Opcional: tipo de pago «Efectivo» para el faltante cobrado en la entrada. Sin él, se usa el de SINPE web.
+    tipoEfectivo: process.env.LOYVERSE_PAYMENT_TYPE_EFECTIVO
 })
 export const varianteDe = paseId => process.env['LOYVERSE_VARIANT_' + String(paseId).toUpperCase()]
 export const loyverseConfigurado = () => { const e = env(); return Boolean(e.token && e.tienda && e.tipoPago) }
@@ -53,9 +55,18 @@ export async function sincronizarOrden(db, codigo) {
                 store_id: env().tienda,
                 source: 'Sitio web',
                 receipt_date: pagadaEn,
-                note: `Orden web ${orden.codigo} · Comprobante SINPE ${orden.comprobante} · Visita ${orden.fechaVisita} · ${orden.nombre} · ${orden.nombrePase}`.slice(0, 250),
+                note: `Orden web ${orden.codigo} · Comprobante ${orden.comprobante}${orden.saldoCobradoEnPuerta ? ' · faltante cobrado en la entrada' : ''}${orden.credito ? ` · crédito ₡${orden.credito}` : ''} · Visita ${orden.fechaVisita} · ${orden.nombre} · ${orden.nombrePase}`.slice(0, 250),
                 line_items,
-                payments: [{ payment_type_id: env().tipoPago, paid_at: pagadaEn }]
+                // Un pago por forma de cobro real (SINPE web y, si hubo faltante, efectivo en la entrada).
+                // Suman exactamente el total de la venta; un sobrepago no entra a la venta: es crédito aparte.
+                payments: orden.cobros?.length
+                    ? Object.values(orden.cobros.reduce((acc, c) => {
+                        const tipo = c.metodo === 'efectivo' ? (env().tipoEfectivo || env().tipoPago) : env().tipoPago
+                        acc[tipo] ??= { payment_type_id: tipo, money_amount: 0, paid_at: pagadaEn }
+                        acc[tipo].money_amount += c.monto
+                        return acc
+                    }, {}))
+                    : [{ payment_type_id: env().tipoPago, money_amount: orden.total, paid_at: pagadaEn }]
             })
         })
         await ordenes.updateOne({ codigo }, { $set: { loyverseEstado: 'registrado', loyverseRecibo: recibo.receipt_number || '', loyverseError: '' } })

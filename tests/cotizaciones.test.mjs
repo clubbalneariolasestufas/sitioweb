@@ -40,10 +40,10 @@ test('cálculo: entrada ₡3 500, menores gratis, ranchos según el día y extra
     const c = P.calcular({ personas: { adultos: 20, ninos: 5 }, areas: ['techada', 'ranchos', 'tenis'], ranchos: 2, horasTenis: 1, menu: 'comida', extras: ['dj', 'musica'] }, '2026-12-05')
     assert.equal(c.personas, 25)
     assert.equal(c.entradas, 20 * 3500)
-    assert.equal(c.areas, 2 * 10000 + 3000, 'sábado: rancho ₡10 000; cancha ₡3 000 la hora')
+    assert.equal(c.areas, 50000 + 2 * 10000 + 3000, 'techada ₡50 000 (25 personas); sábado: rancho ₡10 000; cancha ₡3 000 la hora')
     assert.equal(c.alimentacion, 0)
     assert.equal(c.iva, 0, 'precios con impuestos incluidos')
-    assert.equal(c.total, 20 * 3500 + 23000)
+    assert.equal(c.total, 20 * 3500 + 73000)
     assert.ok(c.porCotizar)
     assert.ok(c.lineas.some(l => l.concepto === 'DJ (por cotizar)'))
     assert.equal(c.adelanto + c.saldo, c.total)
@@ -185,4 +185,19 @@ test('calendario ICS: requiere token y trae eventos y tareas', async () => {
 test('ICS escapa comas, punto y coma y saltos de línea', () => {
     const ics = generarIcs([{ codigo: 'COT-2026-001', estado: 'solicitada', tipoEvento: 'Otro', nombre: 'Ana; Luis, y\notros', telefono: '1', fechaEvento: '2026-12-11', seleccion: { areas: [] }, calculo: { personas: 10, total: 1 } }])
     assert.match(ics, /Ana\\; Luis\\, y\\notros/)
+})
+
+test('área techada: ₡50 000 hasta 40 personas, ₡1 000 más por persona desde la 41, hasta 100', () => {
+    const techada = n => P.calcular({ personas: { adultos: n }, areas: ['techada'] }).areas
+    assert.equal(techada(30), 50000)
+    assert.equal(techada(40), 50000)
+    assert.equal(techada(41), 51000)
+    assert.equal(techada(60), 70000)
+    assert.equal(techada(100), 110000)
+    const grande = P.calcular({ personas: { adultos: 101 }, areas: ['techada'] })
+    assert.equal(grande.areas, 0)
+    assert.ok(grande.coordinar)
+    assert.match(grande.lineas.find(l => l.grupo === 'Áreas').concepto, /coordina con la administración/)
+    // Menores también cuentan para mesas y sillas
+    assert.equal(P.calcular({ personas: { adultos: 38, ninos: 5 }, areas: ['techada'] }).areas, 53000)
 })

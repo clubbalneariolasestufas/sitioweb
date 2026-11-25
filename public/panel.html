@@ -50,6 +50,8 @@
         .compra__estado { justify-self: start; padding: .2rem 1.2rem; border-radius: 99rem; font-weight: 800; font-size: 1.5rem; color: #fff; }
         .compra__estado--pagada { background: var(--verde); }
         .compra__estado--pendiente { background: var(--naranja); color: var(--noche); }
+        .compra__estado--parcial { background: var(--amarillo); color: var(--noche); }
+        .compra__cuenta { display: grid; gap: .6rem; padding: 1rem 1.2rem; border-radius: 1rem; background: #fff7e0; color: var(--noche); font-weight: 700; }
         .compra__acciones { display: grid; gap: .8rem; }
         .compra .boton { font-size: 1.7rem; padding: 1.2rem; }
 
@@ -309,7 +311,11 @@
             try {
                 const d = await api('/api/validar-boleto', { token })
                 const detalle = [d.nombrePase, d.orden ? 'Compra ' + d.orden : ''].filter(Boolean).join(' · ')
-                if (d.resultado === 'ok') mostrar('ok', 'PUEDE PASAR', detalle)
+                if (d.resultado === 'saldo') {
+                    mostrar('aviso', `COBRAR ${colones(d.saldo)}`, `Pagó ${colones(d.recibido)} de ${colones(d.total)}. Cobre el faltante para dar ingreso.`)
+                    $('#texto').value = d.orden; setTimeout(() => { ir('buscar'); buscar() }, 1500)
+                }
+                else if (d.resultado === 'ok') mostrar('ok', 'PUEDE PASAR', detalle + (d.credito ? ` · Tiene crédito de ${colones(d.credito)}: búsquela para entregarlo` : ''))
                 else if (d.resultado === 'usado') mostrar('malo', 'YA FUE USADO', d.usadoEn ? 'Entró a las ' + new Date(d.usadoEn).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : detalle)
                 else if (d.resultado === 'otra_fecha') mostrar('aviso', 'ES PARA OTRO DÍA', d.mensaje)
                 else mostrar('malo', 'BOLETO NO VÁLIDO', 'No deje pasar. Busque la compra por teléfono.')
@@ -356,7 +362,7 @@
         $('#btn-manual').addEventListener('click', () => { $('#texto').value = $('#manual').value; $('#manual').value = ''; ir('buscar'); buscar() })
 
         /* ---------- Buscar compras ---------- */
-        const ESTADO = { pagada: 'PAGADA', pendiente: 'SIN PAGAR' }
+        const ESTADO = { pagada: 'PAGADA', pendiente: 'SIN PAGAR', parcial: 'PAGO PARCIAL', anulada: 'ANULADA' }
         async function buscar() {
             const aviso = $('#buscar-aviso'), lista = $('#buscar-lista')
             aviso.hidden = true; lista.replaceChildren(); $('#buscar-boletos').replaceChildren()
@@ -376,6 +382,37 @@
                 const msg = el('p', 'aviso'); msg.hidden = true
                 const decir = (texto, error) => { msg.hidden = false; msg.className = 'aviso' + (error ? ' aviso--error' : ''); msg.textContent = texto }
 
+                if (c.estado === 'parcial') {
+                    const cuenta = el('div', 'compra__cuenta')
+                    cuenta.append(el('span', '', `Pagó ${colones(c.recibido)} de ${colones(c.total)} · Falta ${colones(c.saldo)}`))
+                    if (c.esHoy) {
+                        const metodo = el('select', 'campo')
+                        ;[['efectivo', 'Cobré en efectivo'], ['sinpe', 'Pagó por SINPE en la entrada']].forEach(([v, t]) => { const o = el('option', '', t); o.value = v; metodo.append(o) })
+                        const comp = el('input', 'campo'); comp.placeholder = 'Número de comprobante del SINPE'; comp.inputMode = 'numeric'; comp.hidden = true
+                        metodo.onchange = () => { comp.hidden = metodo.value !== 'sinpe' }
+                        const b = el('button', 'boton', `Cobré ${colones(c.saldo)}: dar por pagada`); b.type = 'button'
+                        b.onclick = async () => {
+                            b.disabled = true
+                            try {
+                                const r = await api('/api/panel', { accion: 'cobrar-saldo', codigo: c.codigo, metodo: metodo.value, monto: c.saldo, comprobante: comp.value })
+                                decir(r.estado === 'pagada' ? 'Cuenta completa. Ya puede dar ingreso.' : r.mensaje); sonar(true); buscar()
+                            } catch (e) { decir(e.message, true); b.disabled = false }
+                        }
+                        cuenta.append(metodo, comp, b)
+                    } else cuenta.append(el('span', '', 'El faltante se cobra en la entrada el día de la visita.'))
+                    t.append(cuenta)
+                }
+                if (c.estado === 'pagada' && c.credito > 0 && !c.creditoEntregado) {
+                    const cuenta = el('div', 'compra__cuenta')
+                    cuenta.append(el('span', '', `Pagó de más: crédito de ${colones(c.credito)} para usar hoy (restaurante o caja).`))
+                    if (c.esHoy) {
+                        const b = el('button', 'boton boton--claro', `Entregué el crédito de ${colones(c.credito)}`); b.type = 'button'
+                        b.onclick = async () => { b.disabled = true; try { decir((await api('/api/panel', { accion: 'credito-entregado', codigo: c.codigo })).mensaje); b.hidden = true } catch (e) { decir(e.message, true); b.disabled = false } }
+                        cuenta.append(b)
+                    } else cuenta.append(el('span', '', 'Se entrega el día de la visita.'))
+                    t.append(cuenta)
+                }
+
                 if (c.estado === 'pagada' && c.esHoy && c.ingresados < c.cantidad) {
                     const b = el('button', 'boton', `Dar ingreso a ${c.cantidad - c.ingresados} persona(s)`); b.type = 'button'
                     b.onclick = async () => { b.disabled = true; try { const r = await api('/api/panel', { accion: 'ingresar', codigo: c.codigo }); decir(r.mensaje); sonar(true); cargarEstado().catch(() => {}) } catch (e) { decir(e.message, true); b.disabled = false } }
@@ -386,17 +423,24 @@
                     b.onclick = async () => { try { pintarBoletos((await api('/api/panel', { accion: 'boletos', codigo: c.codigo })).boletos) } catch (e) { decir(e.message, true) } }
                     acciones.append(b)
                 }
-                if (c.estado === 'pendiente') {
+                if (c.estado === 'pendiente' || c.estado === 'parcial') {
                     if (rol === 'admin') {
                         const campo = el('input', 'campo'); campo.placeholder = 'Número de comprobante del SINPE'; campo.inputMode = 'numeric'
-                        const b = el('button', 'boton', 'Aprobar el pago a mano'); b.type = 'button'
+                        const monto = el('input', 'campo'); monto.placeholder = 'Monto exacto del comprobante (ej. 17500)'; monto.inputMode = 'numeric'
+                        const b = el('button', 'boton', 'Registrar el SINPE a mano'); b.type = 'button'
                         b.onclick = async () => {
-                            if (!confirm(`¿Vio en el celular del cliente un SINPE de ${colones(c.total)} a nombre del balneario?`)) return
+                            const m = Number(monto.value.replace(/\D/g, ''))
+                            if (!confirm(`¿Vio en el celular del cliente un SINPE de ${colones(m)} a nombre del balneario?`)) return
                             b.disabled = true
-                            try { const r = await api('/api/panel', { accion: 'aprobar', codigo: c.codigo, comprobante: campo.value }); decir('Pago aprobado. Estos son los boletos.'); pintarBoletos(r.boletos); cargarEstado().catch(() => {}) }
+                            try {
+                                const r = await api('/api/panel', { accion: 'aprobar', codigo: c.codigo, comprobante: campo.value, monto: m })
+                                if (r.estado === 'pagada') { decir(`Cuenta completa${r.credito ? ` (crédito de ${colones(r.credito)} para usar el día de la visita)` : ''}. Estos son los boletos.`); pintarBoletos(r.boletos) }
+                                else decir(`Registrado. ${r.mensaje} Queda como pago parcial.`)
+                                cargarEstado().catch(() => {})
+                            }
                             catch (e) { decir(e.message, true); b.disabled = false }
                         }
-                        acciones.append(el('span', '', 'Solo si el pago no se confirmó solo: revise el comprobante en el celular del cliente.'), campo, b)
+                        acciones.append(el('span', '', 'Solo si el pago no se registró solo: copie el número y el monto tal como dice el comprobante del cliente.'), campo, monto, b)
                     } else {
                         acciones.append(el('span', '', 'Esta compra no está pagada. Si el cliente muestra el comprobante, llame a la persona encargada para aprobarla.'))
                     }

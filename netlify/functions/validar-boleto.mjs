@@ -2,6 +2,7 @@ import { json, leerJson } from './_lib/http.mjs'
 import { autorizar } from './_lib/acceso.mjs'
 import { hoyCR } from './_lib/fechas.mjs'
 import { verificar } from './_lib/tokens.mjs'
+import { colones } from '../../src/js/precios-tiquetes.js'
 
 // POST /api/validar-boleto { pin, token, grupo? }
 // Marca el boleto como usado la primera vez que se escanea. Con grupo: true da ingreso también
@@ -24,6 +25,13 @@ export default async (req, context) => {
     const info = { nombrePase: boleto.nombrePase, fechaVisita: boleto.fechaVisita, orden: boleto.ordenCodigo }
     if (boleto.fechaVisita !== hoy)
         return json({ resultado: 'otra_fecha', mensaje: `Este boleto es para el ${boleto.fechaVisita}`, ...info })
+
+    // La cuenta manda: con saldo pendiente no se da ingreso hasta cobrar el faltante en la entrada
+    const orden = await acceso.db.collection('ordenes').findOne({ codigo: boleto.ordenCodigo })
+    if (orden?.estado === 'parcial')
+        return json({ resultado: 'saldo', mensaje: `Cobrar ${colones(orden.saldo)} antes de ingresar`, saldo: orden.saldo, recibido: orden.recibido, total: orden.total, ...info })
+    if (orden && orden.estado !== 'pagada') return json({ resultado: 'falso', mensaje: 'Esta compra no está pagada', ...info })
+    if (orden?.credito > 0 && !orden.creditoEntregado) info.credito = orden.credito
 
     const delGrupo = { ordenCodigo: boleto.ordenCodigo, fechaVisita: hoy, estado: 'valido' }
 

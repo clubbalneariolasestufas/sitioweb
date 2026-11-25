@@ -7,9 +7,9 @@ const COL = 'tenis_reservas'
 const id = (fecha, min) => `${fecha}@${min}`
 
 // Aparta (o confirma con firme=true) todos los bloques de una reserva. Todo o nada.
-export async function apartarTenis(db, { fecha, inicio, bloques, orden, firme = false, personal = false, ahora = new Date() }) {
+export async function apartarTenis(db, { fecha, inicio, bloques, orden, firme = false, personal = false, minutos = MINUTOS_APARTADO, ahora = new Date() }) {
     const col = db.collection(COL)
-    const hasta = firme ? LEJOS_2100 : new Date(ahora.getTime() + MINUTOS_APARTADO * 60_000)
+    const hasta = firme ? LEJOS_2100 : new Date(ahora.getTime() + minutos * 60_000)
     const tomados = []
     for (const min of bloquesTenis(inicio, bloques)) {
         const r = await tomarCupo(col, id(fecha, min), personal ? { fecha, min, personal: true } : { fecha, min }, orden, hasta, firme, ahora)

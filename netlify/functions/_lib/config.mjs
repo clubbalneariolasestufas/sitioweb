@@ -16,6 +16,8 @@ export const MAX_INTENTOS = 5                // intentos de verificar un pago po
 export const TOLERANCIA_PAGO_MIN = 10        // el aviso del banco puede llegar antes de crear la orden
 export const MAX_ORDENES_POR_HORA = 20       // por cliente (huella de IP)
 export const MAX_FALLOS_PIN = 10             // por cliente cada 10 minutos
+export const MAX_FALLOS_CODIGO = 10          // códigos inexistentes o dígitos equivocados, por cliente cada 10 minutos
+export const MAX_INTENTOS_VER = 5            // intentos de ver los boletos de una orden pagada con los 4 dígitos
 
 export const MIN_LATIDO_LECTOR = 3           // minutos sin señal del lector antes de marcarlo en rojo
 

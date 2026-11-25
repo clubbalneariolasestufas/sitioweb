@@ -190,3 +190,18 @@ Para simular el aviso del banco: `http://localhost:8888/demo/pago?monto=12000&co
 
 Usan una base de datos simulada. Cubren montos distintos, pagos reutilizados, límite de intentos, órdenes vencidas, boletos falsos,
 ingreso por grupo, aprobación manual, recibos de Loyverse con reintento y el semáforo de conexiones.
+
+## Revisar las variables de entorno
+
+- En el sitio: `/panel` con PIN de administración > Estado del sistema > **Revisar variables de Netlify**.
+- En la computadora: `node --env-file=.env scripts/verificar-variables.mjs`.
+
+Ninguno de los dos muestra valores: dicen si la variable existe, si el formato es correcto y su **huella** (8 caracteres del SHA-256). Si la huella es igual en el panel y en la computadora, el valor en Netlify es idéntico al del `.env`.
+
+## Seguridad (auditoría del 25/11/2026)
+
+- Encabezados en `netlify.toml`: CSP sin scripts en línea, HSTS, `X-Frame-Options: DENY`, `Permissions-Policy` (cámara solo para el propio sitio).
+  Los scripts del panel y de eventos viven en `src/js/panel.js` y `src/js/eventos-admin.js`. **No agregue `<script>` en línea**: el navegador lo bloquea.
+- Frenos por cliente (`_lib/limite.mjs`, colección `limites`): códigos de orden inexistentes, dígitos equivocados y seguimiento de cotizaciones (10 fallos cada 10 minutos).
+- Una orden pagada permite 5 intentos con los 4 dígitos; después solo el dueño (con su llave) ve los boletos.
+- nodemailer 10 (sin avisos de `npm audit`) y validación estricta de correos.

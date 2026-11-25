@@ -37,11 +37,19 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
+# Encabezados de seguridad para todo el sitio (auditoría del 25/11/2026).
+# CSP: solo scripts propios (sin scripts en línea), fuentes de Google y el mapa de Google en un iframe.
+# Si se agrega un servicio externo (analítica, chat, pagos), hay que sumarlo aquí o el navegador lo bloquea.
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Frame-Options = "DENY"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
 
 [[headers]]
   for = "/panel.html"
@@ -50,7 +58,25 @@
     X-Robots-Tag = "noindex, nofollow"
 
 [[headers]]
+  for = "/panel"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/puerta"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
   for = "/eventos.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/eventos"
   [headers.values]
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"

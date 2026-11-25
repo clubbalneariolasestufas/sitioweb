@@ -23,7 +23,7 @@ const dow = iso => new Date(iso + 'T12:00:00Z').getUTCDay()
 const fechaLarga = iso => { const d = new Date(iso + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}` }
 const primerDia = () => (horaCR() >= HORARIO.cierra ? sumar(hoyIso(), 1) : hoyIso())
 
-const SERVICIOS = [['comida', 'Comida del restaurante'], ['dj', 'DJ'], ['musica', 'Música y sonido']]
+const SERVICIOS = [['comida', 'Comida del restaurante'], ['dj', 'DJ'], ['musica', 'Música y sonido'], ['decoracion', 'Decoración']]
 const ESPACIOS = [['techada', 'Área techada para eventos'], ['ambos', 'Área techada y ranchos'], ['ranchos', 'Solo ranchos libres']]
 const usaTechada = () => e.espacio !== 'ranchos'
 
@@ -56,10 +56,11 @@ function pintarDias() {
         b.disabled = cerrado
         b.setAttribute('aria-pressed', String(sel))
         const l = RANCHOS.length - (e.ocupados[f] || []).length
-        b.setAttribute('aria-label', `${fechaLarga(f)}${cerrado ? ', cerrado' : `, ${l} ranchos libres`}`)
-        b.append(el('span', 'taquilla__dia-sem', i === 0 && f === hoyIso() ? 'HOY' : CORTO[dow(f)]),
-            el('span', 'taquilla__dia-num', String(Number(f.slice(8)))),
-            el('span', 'taquilla__dia-nota', cerrado ? 'Cerrado' : esFinDeSemana(f) ? 'Rancho ₡10 000' : 'Rancho gratis'))
+        const sem = i === 0 && f === hoyIso() ? 'HOY' : CORTO[dow(f)], num = String(Number(f.slice(8)))
+        const nota = cerrado ? 'Cerrado' : esFinDeSemana(f) ? 'Rancho ₡10\u00a0000' : 'Rancho gratis'
+        // El nombre accesible empieza con el texto visible (WCAG 2.5.3) y agrega la fecha completa
+        b.setAttribute('aria-label', `${sem} ${num} ${nota}: ${fechaLarga(f)}${cerrado ? '' : `, ${l} ranchos libres`}`)
+        b.append(el('span', 'taquilla__dia-sem', sem), el('span', 'taquilla__dia-num', num), el('span', 'taquilla__dia-nota', nota))
         b.onclick = () => elegirFecha(f)
         caja.append(b)
     }
@@ -171,7 +172,7 @@ function falta() {
         const tel = $('#tq-telefono').value.replace(/\D/g, '')
         if (tel.length < 8 || tel.length > 15) return 'Revise su WhatsApp'
         const correo = $('#tq-correo').value.trim()
-        if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return 'Revise el correo'
+        if (correo && !/^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(correo)) return 'Revise el correo'
         return ''
     }
     if (personas > MAX_PERSONAS) return `Más de ${MAX_PERSONAS} personas: márquelo como evento`

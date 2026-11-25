@@ -37,6 +37,8 @@ async function asegurarIndices(db) {
         db.collection('boletos').createIndex({ fechaVisita: 1, estado: 1 }),
         db.collection('avisos_banco').createIndex({ en: 1 }, { expireAfterSeconds: 30 * 86400 }),
         db.collection('puerta_fallos').createIndex({ en: 1 }, { expireAfterSeconds: 3600 }),
+        db.collection('limites').createIndex({ en: 1 }, { expireAfterSeconds: 3600 }),
+        db.collection('limites').createIndex({ huella: 1, clave: 1, en: 1 }),
         db.collection('cotizaciones').createIndex({ codigo: 1 }, { unique: true }),
         db.collection('cotizaciones').createIndex({ fechaEvento: 1, estado: 1 }),
         db.collection('cotizaciones').createIndex({ estado: 1, creadaEn: 1 }),

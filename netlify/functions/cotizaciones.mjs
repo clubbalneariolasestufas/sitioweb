@@ -2,6 +2,8 @@ import { getDb } from './_lib/db.mjs'
 import { json, leerJson, ipDe, limpiar } from './_lib/http.mjs'
 import { hoyCR, fechaValida, diaSemana, diasEntre } from './_lib/fechas.mjs'
 import { huella } from './_lib/tokens.mjs'
+import { bloqueado, anotarFallo } from './_lib/limite.mjs'
+import { MAX_FALLOS_CODIGO } from './_lib/config.mjs'
 import { calcular, areasExclusivas, nombreArea, REGLAS, TIPOS_EVENTO } from '../../src/js/precios-eventos.js'
 import { areasOcupadas, nuevoCodigo, vistaCliente, avisarNuevaSolicitud } from './_lib/cotizaciones.mjs'
 
@@ -11,7 +13,7 @@ const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
 // POST /api/cotizaciones: el cliente pide una cotización. El monto lo calcula el servidor.
 // GET  /api/cotizaciones?codigo=COT-2026-001&tel=9393: seguimiento (pide los últimos 4 del teléfono).
 export default async (req, context) => {
-    if (req.method === 'GET') return seguimiento(req)
+    if (req.method === 'GET') return seguimiento(req, context)
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
 
     const d = await leerJson(req, 6144)
@@ -40,7 +42,7 @@ export default async (req, context) => {
     const telefono = limpiar(d.telefono, 20).replace(/\D/g, '')
     if (telefono.length < 8 || telefono.length > 15) return json({ error: 'Teléfono no válido' }, 400)
     const correo = limpiar(d.correo, 120).toLowerCase()
-    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return json({ error: 'Correo no válido' }, 400)
+    if (correo && !/^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(correo)) return json({ error: 'Correo no válido' }, 400)
 
     const db = await getDb()
     const col = db.collection('cotizaciones')
@@ -70,15 +72,17 @@ export default async (req, context) => {
     return json(vistaCliente(cot), 201)
 }
 
-async function seguimiento(req) {
+async function seguimiento(req, context) {
     const u = new URL(req.url)
     const codigo = String(u.searchParams.get('codigo') || '').toUpperCase().trim()
     const tel = String(u.searchParams.get('tel') || '').replace(/\D/g, '')
     if (!/^COT-\d{4}-\d{3,}$/.test(codigo) || tel.length !== 4) return json({ error: 'Escriba el código (COT-2026-001) y los últimos 4 números de su teléfono' }, 400)
     const db = await getDb()
+    // Los códigos COT son consecutivos: sin freno, bastaría probar 10 000 finales de teléfono
+    if (await bloqueado(db, req, context, 'cotizacion', MAX_FALLOS_CODIGO)) return json({ error: 'Demasiados intentos. Espere 10 minutos o escríbanos por WhatsApp.' }, 429)
     const c = await db.collection('cotizaciones').findOne({ codigo })
     // Mismo mensaje si no existe o si el teléfono no coincide: no revela qué códigos existen
-    if (!c || !c.telefono.endsWith(tel)) return json({ error: 'No encontramos una solicitud con esos datos' }, 404)
+    if (!c || !c.telefono.endsWith(tel)) { await anotarFallo(db, req, context, 'cotizacion'); return json({ error: 'No encontramos una solicitud con esos datos' }, 404) }
     return json(vistaCliente(c))
 }
 

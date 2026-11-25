@@ -4,11 +4,12 @@ import { hoyCR } from './_lib/fechas.mjs'
 import { boletosConQr } from './_lib/boletos.mjs'
 import { tomarPagos, evaluarOrden, pagosDeOrden } from './_lib/cuenta.mjs'
 import { reintentarPendientes } from './_lib/loyverse.mjs'
+import { revisarVariables } from './_lib/variables.mjs'
 import { ranchosDelDia, ocuparEnPuerta, liberarDePuerta } from './_lib/ranchos.mjs'
 import { ocuparTenisPuerta, liberarTenisPuerta, tenisDelDia } from './_lib/tenis.mjs'
 import { RANCHOS, TENIS_ABRE, TENIS_CIERRA, colones } from '../../src/js/precios-tiquetes.js'
 
-const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
+const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse', 'variables']
 
 // POST /api/panel { pin, accion, ... }: acciones del personal desde el panel.
 //   buscar    (puerta): busca una compra por código o por teléfono
@@ -18,6 +19,7 @@ const SOLO_ADMIN = ['aprobar', 'boletos', 'reintentar-loyverse']
 //   credito-entregado (puerta): marca entregado el crédito de un sobrepago (mayor a ₡1 000, solo el día de la visita)
 //   boletos   (admin):  vuelve a mostrar los boletos de una compra pagada
 //   reintentar-loyverse (admin): envía a Loyverse las ventas pendientes
+//   variables (admin): revisa las variables de entorno (existe, formato y huella; nunca el valor)
 //   ranchos (puerta): estado de los 7 ranchos hoy
 //   rancho-ocupar / rancho-liberar (puerta): llegó alguien sin reserva / se fue
 //   tenis-ocupar { inicio, bloques } / tenis-liberar { inicio, fin } (puerta): cancha pagada en la entrada
@@ -58,6 +60,7 @@ export default async (req, context) => {
     }
 
     const vistaHoy = async () => ({ fecha: hoy, ranchos: await ranchosDelDia(db, hoy), tenis: await tenisDelDia(db, hoy) })
+    if (d.accion === 'variables') return json(revisarVariables())
     if (d.accion === 'ranchos') return json(await vistaHoy())
     if (d.accion === 'tenis-ocupar' || d.accion === 'tenis-liberar') {
         const inicio = Number(d.inicio), bloques = Number(d.bloques ?? 1), fin = Number(d.fin)

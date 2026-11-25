@@ -3,6 +3,7 @@ import { autorizar } from './_lib/acceso.mjs'
 import { fechaValida, hoyCR } from './_lib/fechas.mjs'
 import { ESTADOS, REGLAS, PLANTILLA_TAREAS, areasExclusivas, nombreArea } from '../../src/js/precios-eventos.js'
 import { areasOcupadas, conTareas } from './_lib/cotizaciones.mjs'
+import { avisarCambioEvento } from './_lib/telegram.mjs'
 
 const sumar = (iso, d) => new Date(Date.parse(iso + 'T12:00:00Z') + d * 86400000).toISOString().slice(0, 10)
 
@@ -87,7 +88,9 @@ export default async (req, context) => {
 
         const r = await col.updateOne({ codigo, estado: c.estado }, { $set: set, $push: { historial: entrada } })
         if (!r.modifiedCount) return json({ error: 'La cotización cambió mientras tanto. Recargue.' }, 409)
-        return json(conTareas(sinHuella(await col.findOne({ codigo }))))
+        const actualizada = await col.findOne({ codigo })
+        await avisarCambioEvento(actualizada)   // aviso al grupo de Telegram (si está configurado)
+        return json(conTareas(sinHuella(actualizada)))
     }
 
     return json({ error: 'Acción no reconocida' }, 400)

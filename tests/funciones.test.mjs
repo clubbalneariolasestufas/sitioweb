@@ -443,3 +443,15 @@ test('panel: la cancha ocupada en la puerta no se puede comprar en la web', asyn
     assert.equal((await post(panel, { pin: '482913', accion: 'tenis-liberar', inicio: 600, fin: 660 })).status, 200)
     assert.equal(db.collection('tenis_reservas').filas.length, 0)
 })
+
+test('seguridad: no se pueden adivinar los 4 dígitos de una orden pagada ni probar códigos al azar', async () => {
+    const { orden } = await ordenPagada()
+    // 5 intentos equivocados desde IP distintas bloquean la orden (aunque luego acierte)
+    for (let i = 0; i < 5; i++) assert.equal((await post(verificarPago, { codigo: orden.codigo, ultimos4: String(1000 + i) }, '9.9.9.' + i)).status, 403)
+    assert.equal((await post(verificarPago, { codigo: orden.codigo, ultimos4: '4821' }, '7.7.7.7')).status, 429)
+    // El dueño con su llave sigue viendo sus boletos
+    assert.equal((await post(verificarPago, { codigo: orden.codigo, llave: orden.llave })).status, 200)
+    // Una misma IP que prueba códigos inexistentes queda frenada
+    for (let i = 0; i < 10; i++) assert.equal((await post(verificarPago, { codigo: 'ZZZZZ' + 'ABCDEFGHJK'[i] }, '5.5.5.5')).status, 404)
+    assert.equal((await post(verificarPago, { codigo: orden.codigo, llave: orden.llave }, '5.5.5.5')).status, 429)
+})

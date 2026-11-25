@@ -161,8 +161,18 @@ test('administración: flujo completo de estados con adelanto y total ajustado',
 
 test('tareas automáticas: fechas relativas al evento y cocina solo con menú', () => {
     const t = P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'comida' } })
-    assert.deepEqual(t.map(x => [x.id, x.fecha]), [['cocina', '2026-12-04'], ['cantidad', '2026-12-08'], ['saldo', '2026-12-09'], ['areas', '2026-12-10'], ['puerta', '2026-12-11']])
-    assert.equal(P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'ninguno' } }).length, 4)
+    assert.deepEqual(t.map(x => [x.id, x.fecha]), [['cocina', '2026-12-04'], ['cantidad', '2026-12-08'], ['platillos', '2026-12-08'], ['saldo', '2026-12-09'], ['comida-dia', '2026-12-11'], ['puerta', '2026-12-11']])
+    // Sin comida ni áreas: confirmaciones, pagos y puerta
+    assert.deepEqual(P.tareasDe({ fechaEvento: '2026-12-11', seleccion: { menu: 'ninguno' } }).map(x => x.id), ['cantidad', 'saldo', 'puerta'])
+    // Cumpleaños en el salón con decoración y DJ: lavar salón, secar sillas, rótulo y montaje
+    const cumple = P.tareasDe({ fechaEvento: '2026-12-11', tipoEvento: 'Cumpleaños', seleccion: { menu: 'ninguno', areas: ['techada'], extras: ['decoracion', 'dj'] } })
+    const ids = cumple.map(x => x.id)
+    for (const id of ['decoracion', 'rotulo', 'musica', 'salon', 'sillas', 'montaje']) assert.ok(ids.includes(id), id)
+    assert.equal(cumple.find(x => x.id === 'salon').fecha, '2026-12-10')
+    assert.equal(cumple.find(x => x.id === 'sillas').fecha, '2026-12-11')
+    assert.equal(cumple.find(x => x.id === 'musica').encargado, 'Alejandro')
+    // Decoración sin cumpleaños: sin rótulo
+    assert.ok(!P.tareasDe({ fechaEvento: '2026-12-11', tipoEvento: 'Actividad de empresa', seleccion: { extras: ['decoracion'] } }).some(x => x.id === 'rotulo'))
 })
 
 test('calendario ICS: requiere token y trae eventos y tareas', async () => {
@@ -200,4 +210,11 @@ test('área techada: ₡50 000 hasta 40 personas, ₡1 000 más por persona desd
     assert.match(grande.lineas.find(l => l.grupo === 'Áreas').concepto, /coordina con la administración/)
     // Menores también cuentan para mesas y sillas
     assert.equal(P.calcular({ personas: { adultos: 38, ninos: 5 }, areas: ['techada'] }).areas, 53000)
+})
+
+test('seguridad: el seguimiento frena a quien prueba teléfonos', async () => {
+    const r = await post(cotizar, solicitud())
+    const { codigo } = await r.json()
+    for (let i = 0; i < 10; i++) assert.equal((await get(cotizar, `/api/cotizaciones?codigo=${codigo}&tel=${String(i).padStart(4, '0')}`)).status, 404)
+    assert.equal((await get(cotizar, `/api/cotizaciones?codigo=${codigo}&tel=1234`)).status, 429)
 })

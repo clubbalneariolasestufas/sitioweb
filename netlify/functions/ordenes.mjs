@@ -46,7 +46,7 @@ export default async (req, context) => {
     const telefono = limpiar(d.telefono, 20).replace(/\D/g, '')
     if (telefono.length < 8 || telefono.length > 15) return json({ error: 'Teléfono no válido' }, 400)
     const correo = limpiar(d.correo, 120).toLowerCase()
-    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return json({ error: 'Correo no válido' }, 400)
+    if (correo && !/^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(correo)) return json({ error: 'Correo no válido' }, 400)
 
     const db = await getDb()
     const col = db.collection('ordenes')

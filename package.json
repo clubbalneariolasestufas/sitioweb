@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "gulp",
     "build": "gulp build",
-    "test": "node --test tests/funciones.test.mjs tests/cotizaciones.test.mjs tests/pagos-parciales.test.mjs",
+    "test": "node --test tests/funciones.test.mjs tests/cotizaciones.test.mjs tests/pagos-parciales.test.mjs tests/telegram.test.mjs tests/variables.test.mjs",
     "demo": "node scripts/demo.mjs"
   },
   "license": "ISC",
@@ -14,13 +14,13 @@
     "gulp": "^5.0.0",
     "gulp-sass": "^5.1.0",
     "gulp-terser": "^2.1.0",
+    "jsqr": "1.4.0",
     "sass": "^1.75.0",
-    "sharp": "^0.33.5",
-    "jsqr": "1.4.0"
+    "sharp": "^0.33.5"
   },
   "dependencies": {
     "mongodb": "^6.8.0",
-    "nodemailer": "^6.9.14",
+    "nodemailer": "^10.6.1",
     "qrcode": "^1.5.4"
   }
 }

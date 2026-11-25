@@ -31,7 +31,8 @@ export const MENUS = [
 
 export const EXTRAS = [
     { id: 'dj', nombre: 'DJ', detalle: 'Por cotizar', precio: 0, porCotizar: true },
-    { id: 'musica', nombre: 'Música y sonido', detalle: 'Por cotizar', precio: 0, porCotizar: true }
+    { id: 'musica', nombre: 'Música y sonido', detalle: 'Por cotizar', precio: 0, porCotizar: true },
+    { id: 'decoracion', nombre: 'Decoración', detalle: 'Por cotizar; en cumpleaños incluye rótulo con el nombre', precio: 0, porCotizar: true }
 ]
 
 export const TIPOS_EVENTO = ['Excursión escolar', 'Actividad de empresa', 'Cumpleaños', 'Convivio familiar', 'Baile o música', 'Otro']
@@ -155,13 +156,27 @@ export const ESTADOS = {
     vencida: { nombre: 'Vencida', siguiente: ['solicitada'], apartaFecha: false }
 }
 
-// Tareas que se generan solas para el personal según la fecha del evento.
-// Los encargados por defecto son Lexie; se cambian aquí cuando se defina quién hace qué.
+// Tareas que se generan solas para el personal según la fecha y lo que pidió el evento.
+// dias = días antes (−) o el mismo día (0) del evento. cuando = qué del evento la activa.
+// Se ven en el panel de eventos, en el calendario y en el bot de Telegram (los tres marcan la misma lista).
+const conComida = c => c.seleccion?.menu && c.seleccion.menu !== 'ninguno'
+const conArea = id => c => (c.seleccion?.areas || []).includes(id)
+const conExtra = (...ids) => c => (c.seleccion?.extras || []).some(x => ids.includes(x))
+const esCumple = c => /cumplea/i.test(c.tipoEvento || '')
 export const PLANTILLA_TAREAS = [
-    { id: 'cocina', dias: -7, texto: 'Pedir insumos de cocina según el menú', encargado: 'Lexie', soloConMenu: true },
-    { id: 'cantidad', dias: -3, texto: 'Confirmar con el cliente la cantidad final de personas', encargado: 'Lexie' },
-    { id: 'saldo', dias: -2, texto: 'Cobrar el saldo por SINPE', encargado: 'Lexie' },
-    { id: 'areas', dias: -1, texto: 'Preparar y limpiar las áreas reservadas', encargado: 'Lexie' },
+    { id: 'cocina', dias: -7, texto: 'Pedir insumos de cocina según los platillos pedidos', encargado: 'Lexie', cuando: conComida },
+    { id: 'decoracion', dias: -5, texto: 'Coordinar la decoración contratada: tema, colores y hora de montaje', encargado: 'Lexie', cuando: conExtra('decoracion') },
+    { id: 'cantidad', dias: -3, texto: 'Confirmaciones del evento: cantidad final de personas, hora de llegada y encargado del grupo', encargado: 'Lexie' },
+    { id: 'platillos', dias: -3, texto: 'Confirmar con el cliente los platillos y cantidades de cada día', encargado: 'Lexie', cuando: conComida },
+    { id: 'rotulo', dias: -3, texto: 'Rotulación de cumpleaños: nombre, edad y frase del cumpleañero', encargado: 'Lexie', cuando: c => esCumple(c) && conExtra('decoracion')(c) },
+    { id: 'saldo', dias: -2, texto: 'Asegurar los pagos: el saldo del evento debe estar recibido (revisar en el panel de eventos)', encargado: 'Lexie' },
+    { id: 'musica', dias: -2, texto: 'Confirmar DJ o música y probar el sonido y la electricidad', encargado: 'Alejandro', cuando: conExtra('dj', 'musica') },
+    { id: 'salon', dias: -1, texto: 'Lavar el salón (área techada) y los baños', encargado: 'Limpieza', cuando: conArea('techada') },
+    { id: 'ranchos', dias: -1, texto: 'Limpiar los ranchos del grupo y revisar agua y basureros', encargado: 'Limpieza', cuando: conArea('ranchos') },
+    { id: 'cancha', dias: -1, texto: 'Barrer la cancha de tenis y revisar la red', encargado: 'Limpieza', cuando: conArea('tenis') },
+    { id: 'sillas', dias: 0, texto: 'Secar y acomodar sillas y mesas del salón antes de las 8:00', encargado: 'Limpieza', cuando: conArea('techada') },
+    { id: 'montaje', dias: 0, texto: 'Montar la decoración y el rótulo antes de que llegue el grupo', encargado: 'Lexie', cuando: conExtra('decoracion') },
+    { id: 'comida-dia', dias: 0, texto: 'Preparar los platillos confirmados para el grupo', encargado: 'Lexie', cuando: conComida },
     { id: 'puerta', dias: 0, texto: 'Lista del grupo en la puerta y recibir al encargado', encargado: 'Lexie' }
 ]
 
@@ -171,9 +186,8 @@ const sumarDias = (iso, d) => {
 }
 
 export function tareasDe(cot) {
-    const conMenu = cot.seleccion?.menu && cot.seleccion.menu !== 'ninguno'
     return PLANTILLA_TAREAS
-        .filter(t => !t.soloConMenu || conMenu)
+        .filter(t => !t.cuando || t.cuando(cot))
         .map(t => ({ id: t.id, fecha: sumarDias(cot.fechaEvento, t.dias), texto: t.texto, encargado: t.encargado, hecha: !!cot.tareasHechas?.includes(t.id) }))
 }
 

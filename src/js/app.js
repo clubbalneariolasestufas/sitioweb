@@ -104,6 +104,9 @@ function pintarGaleria() {
         const img = document.createElement('img')
         img.className = 'galeria__imagen'
         img.src = `build/img/galeria/${i}-t.webp`
+        img.srcset = `build/img/galeria/${i}-s.webp 400w, build/img/galeria/${i}-t.webp 640w`
+        img.sizes = '(max-width: 520px) 92vw, 320px'
+        img.decoding = 'async'
         img.alt = `Foto ${i} del ${CONFIG.nombre}`
         img.loading = 'lazy'
         img.width = 640

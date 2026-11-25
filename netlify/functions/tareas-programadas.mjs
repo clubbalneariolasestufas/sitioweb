@@ -4,6 +4,7 @@ import { reintentarPendientes } from './_lib/loyverse.mjs'
 import { enviarAlerta } from './_lib/correo.mjs'
 import { vencerCotizaciones, resumenDiario } from './_lib/cotizaciones.mjs'
 import { aplicarPagosConCodigo, avisarSaldos } from './_lib/cuenta.mjs'
+import { avisosTelegram } from './_lib/telegram.mjs'
 
 // Cada 30 minutos: une a su orden los SINPE con código aunque el cliente haya cerrado la página,
 // avisa por correo los faltantes de pagos parciales, envía a Loyverse las ventas pendientes
@@ -15,6 +16,7 @@ export default async () => {
     await reintentarPendientes(db, 20)
     await vencerCotizaciones(db)
     await resumenDiario(db)
+    try { await avisosTelegram(db) } catch (e) { console.error('Telegram:', e.message) }
     const estado = await calcularEstado(db)
     const rojos = estado.items.filter(i => i.estado === 'rojo')
     if (rojos.length) {

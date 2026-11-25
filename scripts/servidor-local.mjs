@@ -15,7 +15,7 @@ const db = crearDbFalsa()
 setDbParaPruebas(db)
 
 const rutas = {}
-for (const f of ['cotizaciones', 'disponibilidad', 'eventos-admin', 'calendario', 'ordenes', 'panel', 'estado', 'verificar-pago', 'validar-boleto', 'ranchos']) {
+for (const f of ['cotizaciones', 'disponibilidad', 'eventos-admin', 'calendario', 'ordenes', 'panel', 'estado', 'verificar-pago', 'validar-boleto', 'ranchos', 'telegram']) {
     const m = await import(`../netlify/functions/${f}.mjs`)
     rutas[m.config.path] = m.default
 }

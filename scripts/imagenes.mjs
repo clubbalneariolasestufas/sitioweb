@@ -15,7 +15,10 @@ export async function optimizarImagenes() {
             sharp(origen).rotate().resize({ width: 1400, withoutEnlargement: true })
                 .webp({ quality: 72 }).toFile(`public/build/img/galeria/${i}.webp`),
             sharp(origen).rotate().resize({ width: 640, withoutEnlargement: true })
-                .webp({ quality: 70 }).toFile(`public/build/img/galeria/${i}-t.webp`)
+                .webp({ quality: 70 }).toFile(`public/build/img/galeria/${i}-t.webp`),
+            // Miniatura chica para celulares y pantallas normales (srcset): ~40 % del peso de la de 640
+            sharp(origen).rotate().resize({ width: 400, withoutEnlargement: true })
+                .webp({ quality: 64, effort: 6 }).toFile(`public/build/img/galeria/${i}-s.webp`)
         )
     }
 

@@ -236,7 +236,7 @@ function validarPaso(p) {
         const tel = $('#telefono').value.replace(/\D/g, '')
         if (tel.length < 8 || tel.length > 15) return 'Escriba un número de WhatsApp válido'
         const correo = $('#correo').value.trim()
-        if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return 'Revise el correo'
+        if (correo && !/^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(correo)) return 'Revise el correo'
     }
     return ''
 }

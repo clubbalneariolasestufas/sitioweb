@@ -28,3 +28,11 @@ test('variables: comillas, espacios, PIN repetidos y obsoletas', () => {
     assert.match(fila(r, 'ADMIN_PIN_HASH').nota, /distintos/)
     assert.deepEqual(r.obsoletas, ['LOYVERSE_VARIANT_DIA'])
 })
+
+test('variables: SINPE con guion, / al final, comentario pegado y nombre pegado', () => {
+    const r = revisarVariables({ ...base(), SINPE_NUMBER: '6003-4009', SITE_URL: 'https://lasestufas.netlify.app/', LOYVERSE_STORE_ID: '8e1122ed-ea34-4863-ba69-950b7b6a36dc # tienda', LOYVERSE_PAYMENT_TYPE_ID: 'LOYVERSE_PAYMENT_TYPE_ID=x' })
+    assert.equal(fila(r, 'SINPE_NUMBER').estado, 'ok')
+    assert.match(fila(r, 'SITE_URL').nota, /Quite la \//)
+    assert.match(fila(r, 'LOYVERSE_STORE_ID').nota, /comentario/)
+    assert.match(fila(r, 'LOYVERSE_PAYMENT_TYPE_ID').nota, /nombre de la variable/)
+})

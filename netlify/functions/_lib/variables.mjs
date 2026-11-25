@@ -17,7 +17,7 @@ export const VARIABLES = [
     { nombre: 'GATE_PIN_HASH', grupo: 'Seguridad', req: 'si', secreta: true, ok: v => PIN.test(v), formato: 'scrypt$…$… (de scripts/hash-pin.mjs, sin comillas)' },
     { nombre: 'ADMIN_PIN_HASH', grupo: 'Seguridad', req: 'si', secreta: true, ok: v => PIN.test(v), formato: 'scrypt$…$… (de scripts/hash-pin.mjs, sin comillas)' },
     { nombre: 'SITE_URL', grupo: 'Sitio', req: 'si', ok: v => /^https:\/\/[^\s/]+\.[^\s/]+$/.test(v), formato: 'https://dominio (sin / al final)' },
-    { nombre: 'SINPE_NUMBER', grupo: 'Sitio', req: 'si', ok: v => /^\d{8}$/.test(v), formato: '8 dígitos, sin guion' },
+    { nombre: 'SINPE_NUMBER', grupo: 'Sitio', req: 'si', ok: v => /^\d{4}-?\d{4}$/.test(v), formato: '6003-4009 (así se muestra a los clientes)' },
     { nombre: 'ORDEN_VENCE_MIN', grupo: 'Sitio', req: 'no', ok: v => /^\d+$/.test(v) && +v >= 15 && +v <= 1440, formato: 'minutos entre 15 y 1440 (si falta: 120)' },
     { nombre: 'CLUB_EMAIL', grupo: 'Correo', req: 'funcion', ok: v => CORREO.test(v), formato: 'correo' },
     { nombre: 'EVENTOS_EMAIL', grupo: 'Correo', req: 'funcion', ok: v => CORREO.test(v), formato: 'correo' },
@@ -55,6 +55,9 @@ export function revisarVariables(env = process.env) {
         }
         if (crudo !== crudo.trim()) return { ...base, estado: 'formato', huella: huella(crudo), nota: 'Tiene espacios al inicio o al final' }
         if (/^["'].*["']$/.test(crudo)) return { ...base, estado: 'formato', huella: huella(crudo), nota: 'Está entre comillas: pegue el valor sin comillas' }
+        if (crudo.startsWith(def.nombre + '=')) return { ...base, estado: 'formato', huella: huella(crudo), nota: 'Incluye el nombre de la variable: pegue solo lo que va después del =' }
+        if (/\s#/.test(crudo) && !def.secreta) return { ...base, estado: 'formato', huella: huella(crudo), nota: 'Tiene un comentario (#) pegado: borre desde el #' }
+        if (def.nombre === 'SITE_URL' && crudo.endsWith('/')) return { ...base, estado: 'formato', huella: huella(crudo), nota: 'Quite la / del final' }
         return { ...base, estado: def.ok(crudo) ? 'ok' : 'formato', huella: huella(crudo), nota: def.ok(crudo) ? '' : 'Formato esperado: ' + def.formato }
     })
     const g = filas.find(f => f.nombre === 'GATE_PIN_HASH'), a = filas.find(f => f.nombre === 'ADMIN_PIN_HASH')

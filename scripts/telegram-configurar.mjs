@@ -2,7 +2,8 @@
 // Uso, una sola vez y cada vez que cambie la dirección del sitio:
 //   node --env-file=.env scripts/telegram-configurar.mjs
 // Necesita en .env: TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET y SITE_URL (las mismas que en Netlify).
-const { TELEGRAM_BOT_TOKEN: token, TELEGRAM_WEBHOOK_SECRET: secreto, SITE_URL: sitio } = process.env
+const { TELEGRAM_BOT_TOKEN: token, TELEGRAM_WEBHOOK_SECRET: secreto } = process.env
+const sitio = (process.env.SITE_URL || '').replace(/\/+$/, '')
 if (!token || !secreto || !sitio) { console.error('Faltan TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET o SITE_URL en .env'); process.exit(1) }
 if (!/^[A-Za-z0-9_-]{16,256}$/.test(secreto)) { console.error('TELEGRAM_WEBHOOK_SECRET debe tener de 16 a 256 letras, números, - o _'); process.exit(1) }
 const api = async (metodo, cuerpo) => {
